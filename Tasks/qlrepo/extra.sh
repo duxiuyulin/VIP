@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-## Mod: Build2021101V1
+## Mod: Build2021102V1
 ## 添加你需要重启自动执行的任意命令，比如 ql repo
 ## 安装node依赖使用 pnpm install -g xxx xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
 ## 安装python依赖使用 pip3 install xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
@@ -136,7 +136,7 @@ check_Ninja_normal() {
     i=0
     while ((i <= 0)); do
         echo "扫描 Ninja 是否在线"
-        if [ "$(pgrep -f ninja)" -ne 0 ]; then
+        if [ -z "$(pgrep -f ninja)" ]; then
             i=0
             echo "$NOWTIME"" 扫描结束！Ninja 掉线了不用担心马上重启！"
             cd /ql || exit
@@ -144,7 +144,7 @@ check_Ninja_normal() {
             cd /ql/ninja/backend || exit
             pnpm install
             pm2 start
-            if [ "$(pgrep -f Daemon)" -ne 1 ]; then
+            if [ -n "$(pgrep -f Daemon)" ]; then
                 i=1
                 echo "$NOWTIME"" Ninja 重启完成！"
                 curl "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_USER_ID&text=Ninja 已重启完成"
