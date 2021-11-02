@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-## Mod: Build2021102V1
+## Mod: Build2021102V2
 ## 添加你需要重启自动执行的任意命令，比如 ql repo
 ## 安装node依赖使用 pnpm install -g xxx xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
 ## 安装python依赖使用 pip3 install xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
@@ -81,7 +81,7 @@ OR2() {
     ql repo https://github.com/curtinlv/JD-Script.git "jd_"
 }
 OR3() {
-    ql repo https://github.com/smiek2121/scripts.git "jd_|gua_" "" "^MovementFaker|^JDJRValidator|^ZooFaker|^sign"
+    ql repo https://github.com/smiek2121/scripts.git "jd_|gua_" "" "^MovementFaker|^JDJRValidator|^ZooFaker|^sign|^cleancart"
 }
 OR4() {
     ql repo https://github.com/cdle/xdd.git "jd_" "disposable|expired|jdc"

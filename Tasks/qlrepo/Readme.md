@@ -71,7 +71,7 @@ ql repo https://github.com/curtinlv/JD-Script.git "jd_"
 - `smiek2221`
 
 ```sh
-ql repo https://github.com/smiek2121/scripts.git "jd_|gua_" "" "^MovementFaker|^JDJRValidator|^ZooFaker|^sign" 
+ql repo https://github.com/smiek2121/scripts.git "jd_|gua_" "" "^MovementFaker|^JDJRValidator|^ZooFaker|^sign|^cleancart" 
 ```
 
 - `cdle`
