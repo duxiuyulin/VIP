@@ -260,7 +260,7 @@ fi
 # 端口存在检测
 check_port() {
     echo "正在检测端口:$1"
-    netstat -tlpn | grep "\b$1\b"
+    netstat -tlpn | grep "[[:graph:]]*:${1}\b"
 }
 if [ "$port" != "2" ]; then
     while check_port "$JD_PORT"; do

@@ -215,7 +215,7 @@ fi
 # 端口存在检测
 check_port() {
     echo "正在检测端口:$1"
-    netstat -tlpn | grep "\b$1\b"
+    netstat -tlpn | grep "[[:graph:]]*:${1}\b"
 }
 if [ "$NETWORK" = "bridge" ]; then
     while check_port "$V2P_PORT"; do
