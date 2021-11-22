@@ -1,12 +1,12 @@
 使用方法：
 
 操作概括：
-1、把 code.sh、task_before.sh 复制到青龙容器的 /ql/config/ 路径。将 code.sh 设定定时任务。
+1、把 code.sh、task_before.sh、jdCookie.js 复制到青龙容器的 /ql/config/ 路径。将 code.sh 设定定时任务。
 名称：格式化更新互助码
 命令：task /ql/config/code.sh
-定时规则：10 * * * *
+定时规则：10 */3 * * *
 注：①表示每整点10分时运行。
-        ②自动静默安装或修复常用依赖功能可能带来脚本运行时间长，主机性能消耗较大的副作用，如果不需要该功能，请自行修改 code.sh 内容：FixDependType="1" 改成 FixDependType=""
+②自动静默安装或修复常用依赖功能可能带来脚本运行时间长，主机性能消耗较大的副作用，如果不需要该功能，请自行修改 code.sh 内容：FixDependType="1" 改成 FixDependType=""
 2、如果需要使用临时禁止某些 COOKIE 参加所有活动或某些活动功能，以及全部随机或部分随机 COOKIE 参加活动的功能。还需要将 config_sample.sh 相应的环境变量设置模板复制到你的 /ql/config/config.sh 中，并根据要求填写；
 3、如果需要使用组队利益最大化模板，需要将 team.sh 复制到青龙容器的 /ql/config/ 路径。用法详见 team.sh 说明。
 
@@ -42,9 +42,9 @@ repo=$repo4                                        #默认调用 shufflewzc_fake
 c）问题：
 1) 互助码和互助规则的日志中 Token 是空值？
 答：必须先运行 code.sh ，将"京喜财富岛的脚本格式化输出京喜token"功能解锁，再完整运行一次优先仓库的京喜财富岛活动脚本后，最后再运行 code.sh 。否则 Token 可能会无法写入或写入不完整。
-2) 互助码和互助规则的日志中  Token 写入正常，但是京喜财富岛提现还是读取不到 Token ？
+2) 互助码和互助规则的日志中 Token 写入正常，但是京喜财富岛提现还是读取不到 Token ？
 答：①确保 task_before.sh 是最新版，具体可以比对你的文件和置顶模板的第三行 Build 号。
-    ②京喜财富岛的任务不能设置 conc JD_COOKIE 并发多线程，否则会导致 Token 读取异常。
+②京喜财富岛的任务不能设置 conc JD_COOKIE 并发多线程，否则会导致 Token 读取异常。
 
 二、其他自定义的参数配置详见脚本内容注释。如：
 1、自定义互助规则模板定义；
@@ -90,13 +90,13 @@ docker exec -it qinglong bash
 package_name="canvas png-js date-fns axios crypto-js ts-md5 tslib @types/node dotenv typescript fs require tslib"
 
 for i in $package_name; do
-    case $i in
-        canvas)
-            cd /ql/scripts
-            npm ls $i
-            ;;
-        *)
-            npm ls $i -g
-            ;;
-    esac
+case $i in
+canvas)
+cd /ql/scripts
+npm ls $i
+;;
+*)
+npm ls $i -g
+;;
+esac
 done

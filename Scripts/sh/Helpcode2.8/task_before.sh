@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Build 20211009-001-test
+# Build 20211122-001
 
 name_js=(
   jd_fruit
@@ -163,6 +163,7 @@ team_task(){
         for ((i=0; i<${#teamer_array[*]}; i++)); do
             combine_team ${teamer_array[i]} ${team_array[i]} ${activityId[i]} ${activityUrl[i]}
             [[ $q -ge $(($user_sum/p)) ]] && q=$(($user_sum/p))
+            [[ q -lt 1 ]] && q=1
             for ((m = 0; m < $user_sum; m++)); do
                 j=$((m + 1))
                 x=$((m/q))
@@ -253,7 +254,8 @@ combine_only() {
                     . $dir_log/.ShareCode/${name_config[i]}.log
                     result=$(combine_sub ${var_name[i]})
                     if [[ $result ]]; then
-                        export ${env_name[i]}=$result
+                        export ShareCodeConfigName=${name_config[i]}
+                        export ShareCodeEnvName=${env_name[i]}
                     fi
                 fi
                 ;;
