@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Build 20211123-001
+## Build 20211123-002
 
 ## 导入通用变量与函数
 dir_shell=/ql/shell
@@ -349,7 +349,7 @@ export_codes_sub() {
                     tmp_ramdom_for_other=""
                     random_num_list=$(seq $((front_num+1)) $user_sum | sort -R)
                     for x in $random_num_list; do
-                        tmp_ramdom_for_other="$tmp_ramdom_for_other\${$config_name_my$x}"
+                        tmp_ramdom_for_other="$tmp_ramdom_for_other@\${$config_name_my$x}"
                     done
                     echo "$config_name_for_other$j=\"$tmp_for_other$tmp_ramdom_for_other\"" | perl -pe "s|($config_name_for_other\d+=\")@|\1|"
                 done
@@ -373,7 +373,7 @@ export_codes_sub() {
                     tmp_ramdom_for_other=""
                     for x in $random_num_list; do
                         [[ $m -eq $((x-1)) ]] && continue
-                        tmp_ramdom_for_other="$tmp_ramdom_for_other\${$config_name_my$x}"
+                        tmp_ramdom_for_other="$tmp_ramdom_for_other@\${$config_name_my$x}"
                     done
                     echo "$config_name_for_other$j=\"$tmp_for_other$tmp_ramdom_for_other\"" | perl -pe "s|($config_name_for_other\d+=\")@|\1|"
                 done

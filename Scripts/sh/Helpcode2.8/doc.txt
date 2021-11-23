@@ -16,6 +16,9 @@ task_before.sh不再负责互助码和互助规则的导入，只负责读取 /q
 必读四：
 code.sh 和 task_before.sh 还是仍旧存放在 /ql/config/ 路径不变。
 
+Build 20211123-002
+1、BUGs FIXED；
+
 Build 20211123-001
 1、修正车头模式助力规则中，随机账号部分出现本账号序号的问题；
 
@@ -39,4 +42,7 @@ Build 20211009-001
 暂未更新内容
 
 [ 信物 : jdCookie.js ]
+2021.11.23 更新
+1、同步最新。增加了“如果当前活动并没有互助内容，请无视上面这句话”的提示；
+
 风之凌殇 魔改版 jdCookie.js 。提前将 魔改版 jdCookie.js 拷贝到 /ql/config/ 路径，新版 code.sh 可自动将其拷贝至 /ql/deps/ 路径并且强制覆盖到 /ql/scripts/ 路径和子目录下所有的 jdCookie.js
