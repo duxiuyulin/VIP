@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-## Mod: Build2021102V2
+## Mod: Build2021124V1
 ## 添加你需要重启自动执行的任意命令，比如 ql repo
 ## 安装node依赖使用 pnpm install -g xxx xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
 ## 安装python依赖使用 pip3 install xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
@@ -17,13 +17,16 @@
 ### （2）⚠未修改容器映射的请勿运行，否则会出现青龙打不开或者设备死机等不良后果，映射参考 https://github.com/MoonBegonia/ninja#%E5%AE%B9%E5%99%A8%E5%86%85
 
 #------ 设置区 ------#
+# shellcheck disable=SC2005
 ## 1. 拉取仓库编号设置，默认 shufflewzc 仓库
 CollectedRepo=(4) ##示例：CollectedRepo=(2 4 6)
 OtherRepo=()      ##示例：OtherRepo=(1 3)
 ## 2. 是否安装依赖和安装依赖包的名称设置
-dependencies="r" ##yes为全部安装，no为不安装，p为安装package，r为安装requirement
-package_name="@types/node axios canvas crypto-js date-fns dotenv fs jsdom png-js require ts-md5 tslib typescript"
-requirement_name="cryptography==3.2.1 json5 requests rsa"
+dependencies="al py pl" ##yes为全部安装，no为不安装，al为安装alpine依赖，py为安装python依赖，js为安装nodejs依赖，pl为安装perl依赖
+alpine_pkgs="bash curl gcc git jq libffi-dev make musl-dev openssl-dev perl perl-app-cpanminus perl-dev py3-pip python3 python3-dev wget"
+py_reqs="bs4 cryptography pyaes requests rsa tomli"
+js_pkgs="@iarna/toml axios crypto-js got"
+pl_mods="File::Slurp JSON5 TOML::Dumper"
 ## 3. Ninja 是否需要启动和更新设置
 Ninja="on" ##up为更新，on为启动，down为不运行
 
@@ -164,103 +167,147 @@ fi
 
 # 📦依赖
 # shellcheck disable=SC2015
-install_packages_normal() {
-    for i in "$@"; do
-        case $i in
-        canvas)
-            cd /ql/scripts || exit
-            if [[ $(npm ls "$i" | grep ERR) != "" ]]; then
-                npm uninstall "$i"
+install() {
+    count=0
+    flag=$1
+    while true; do
+        echo ".......... $2 begin .........."
+        result=$3
+        if [ "$result" -gt 0 ]; then
+            flag=0
+        else
+            flag=1
+        fi
+        if [ $flag -eq "$1" ]; then
+            echo "---------- $2 succeed ----------"
+            break
+        else
+            count=$((count + 1))
+            if [ $count -eq 6 ]; then
+                echo "!! 自动安装失败，请尝试进入容器后执行 $2 !!"
+                break
             fi
-            if [[ "$(npm ls "$i")" =~ (empty) ]]; then
-                apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev && npm i "$i" --prefix /ql/scripts --build-from-source
-            fi
-            ;;
-        *)
-            if [[ "$(npm ls "$i")" =~ $i ]]; then
-                npm uninstall "$i"
-            elif [[ $(npm ls "$i" -g | grep ERR) != "" ]]; then
-                npm uninstall "$i" -g
-            fi
-            if [[ "$(npm ls "$i" -g)" =~ (empty) ]]; then
-                [[ $i = "typescript" ]] && npm i "$i" -g --force || npm i "$i" -g
-            fi
-            ;;
-        esac
+            echo ".......... retry in 5 seconds .........."
+            sleep 5
+        fi
     done
 }
 
-install_packages_force() {
-    for i in "$@"; do
-        case $i in
-        canvas)
-            cd /ql/scripts || exit
-            if [[ "$(npm ls "$i")" =~ $i && $(npm ls "$i" | grep ERR) != "" ]]; then
-                npm uninstall "$i"
-                rm -rf /ql/scripts/node_modules/"$i"
-                rm -rf /usr/local/lib/node_modules/lodash/*
-            fi
-            if [[ "$(npm ls "$i")" =~ (empty) ]]; then
-                apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev && npm i "$i" --prefix /ql/scripts --build-from-source --force
-            fi
-            ;;
-        *)
-            cd /ql/scripts || exit
-            if [[ "$(npm ls "$i")" =~ $i ]]; then
-                npm uninstall "$i"
-                rm -rf /ql/scripts/node_modules/"$i"
-                rm -rf /usr/local/lib/node_modules/lodash/*
-            elif [[ "$(npm ls "$i" -g)" =~ $i && $(npm ls "$i" -g | grep ERR) != "" ]]; then
-                npm uninstall "$i" -g
-                rm -rf /ql/scripts/node_modules/"$i"
-                rm -rf /usr/local/lib/node_modules/lodash/*
-            fi
-            if [[ "$(npm ls "$i" -g)" =~ (empty) ]]; then
-                npm i "$i" -g --force
-            fi
-            ;;
-        esac
+install_alpine_pkgs() {
+    apk update
+    apk_info=" $(apk info) "
+    for i in $alpine_pkgs; do
+        if expr "$apk_info" : ".*\s${i}\s.*" >/dev/null; then
+            echo "$i 已安装"
+        else
+            install 0 "apk add $i" "$(apk add --no-cache "$i" | grep -c 'OK')"
+        fi
     done
 }
 
-install_packages_all() {
-    install_packages_normal "$package_name"
-    for i in $package_name; do
-        install_packages_force "$i"
+install_py_reqs() {
+    pip3 install --upgrade pip
+    pip3_freeze="$(pip3 freeze)"
+    for i in $py_reqs; do
+        if expr "$pip3_freeze" : ".*${i}" >/dev/null; then
+            echo "$i 已安装"
+        else
+            install 0 "pip3 install $i" "$(pip3 install "$i" | grep -c 'Successfully')"
+        fi
     done
 }
 
-install_requirements() {
-    for i in $requirement_name; do
-        case $i in
-        cryptography==3.2.1)
-            cd /ql/scripts || exit
-            if [[ "$(pip3 freeze)" =~ cryptography==3.2.1 ]]; then
-                echo "cryptography==3.2.1 已安装"
+install_js_pkgs_initial() {
+    if [ -d "/ql/scripts" ] && [ ! -f "/ql/scripts/package.bak.json" ]; then
+        cd /ql/scripts || exit
+        rm -rf node_modules
+        rm -rf .pnpm-store
+        mv package-lock.json package-lock.bak.json
+        mv package.json package.bak.json
+        mv pnpm-lock.yaml pnpm-lock.bak.yaml
+        install 1 "npm install -g package-merge" "$(echo "$(npm install -g package-merge && npm ls -g package-merge)" | grep -cE '(empty)|ERR')" &&
+            export NODE_PATH="/usr/local/lib/node_modules" &&
+            node -e \
+                "const merge = require('package-merge');
+                 const fs = require('fs');
+                 const dst = fs.readFileSync('/ql/repo/Oreomeow_checkinpanel_master/package.json');
+                 const src = fs.readFileSync('/ql/scripts/package.bak.json');
+                 fs.writeFile('/ql/scripts/package.json', merge(dst, src), function (err) {
+                     if (err) {
+                         console.log(err);
+                     }
+                     console.log('package.json merged successfully!');
+                 });"
+    fi
+    npm install
+}
+install_js_pkgs_each() {
+    is_empty=$(npm ls "$1" | grep empty)
+    has_err=$(npm ls "$1" | grep ERR)
+    if [ "$is_empty" = "" ] && [ "$has_err" = "" ]; then
+        echo "$1 已正确安装"
+    elif [ "$has_err" != "" ]; then
+        uninstall_js_pkgs "$1"
+    else
+        install 1 "npm install $1" "$(echo "$(npm install --force "$1" && npm ls --force "$1")" | grep -cE '(empty)|ERR')"
+    fi
+}
+uninstall_js_pkgs() {
+    npm uninstall "$1"
+    rm -rf "$(pwd)"/node_modules/"$1"
+    rm -rf /usr/local/lib/node_modules/lodash/*
+    npm cache clear --force
+}
+install_js_pkgs_all() {
+    install_js_pkgs_initial
+    for i in $js_pkgs; do
+        install_js_pkgs_each "$i"
+    done
+    npm ls --depth 0
+}
+
+install_pl_mods() {
+    if command -v cpm >/dev/null 2>&1; then
+        echo "App::cpm 已安装"
+    else
+        install 1 "cpanm -fn App::cpm" "$(cpanm -fn App::cpm | grep -c "FAIL")"
+        if ! command -v cpm >/dev/null 2>&1; then
+            if [ -f ./cpm ]; then
+                chmod +x cpm && ./cpm --version
             else
-                apk add --no-cache gcc libffi-dev musl-dev openssl-dev python3-dev && pip3 install cryptography~=3.2.1
+                cp -f /ql/repo/Oreomeow_checkinpanel_master/cpm ./ && chmod +x cpm && ./cpm --version
+                if [ ! -f ./cpm ]; then
+                    curl -fsSL https://cdn.jsdelivr.net/gh/Oreomeow/checkinpanel/cpm >cpm && chmod +x cpm && ./cpm --version
+                fi
             fi
-            ;;
-        *)
-            if [[ "$(pip3 freeze)" =~ $i ]]; then
-                echo "$i 已安装"
-            else
-                pip3 install "$i"
-            fi
-            ;;
-        esac
+        fi
+    fi
+    for i in $pl_mods; do
+        if [ -f "$(perldoc -l "$i")" ]; then
+            echo "$i 已安装"
+        else
+            install 1 "cpm install -g $i" "$(cpm install -g "$i" | grep -c "FAIL")"
+        fi
     done
 }
 
 case $dependencies in
 yes)
-    install_packages_all &
-    install_requirements &
+    install_alpine_pkgs &
+    install_py_reqs &
+    install_js_pkgs_all &
+    install_pl_mods &
     ;;
-p)
-    install_packages_all &
+*al*)
+    install_alpine_pkgs &
     ;;
-r)
-    install_requirements &
+*py*)
+    install_py_reqs &
+    ;;
+*js*)
+    install_js_pkgs_all &
+    ;;
+*pl*)
+    install_pl_mods &
     ;;
 esac

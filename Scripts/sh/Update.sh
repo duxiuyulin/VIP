@@ -24,6 +24,8 @@ file_config_notify_js=$dir_config/sendNotify.js
 GithubProxyUrl=""
 TG_BOT_TOKEN=""
 TG_USER_ID=""
+TG_PROXY_HOST=""
+TG_PROXY_PORT=""
 openCardBean=""
 
 CollectedRepo="4"
@@ -34,37 +36,41 @@ repoNum="6"
 HelpType="HelpType=\"0\""
 BreakHelpType="BreakHelpType=\"1\""
 BreakHelpNum="BreakHelpNum=\"31-1000\""
+package_name="package_name=\"@types/node canvas crypto-js date-fns dotenv fs js-base64 jsdom png-js request require ts-md5 tslib typescript\""
 
 update_config() {
-    curl -sL https://git.io/config.sh >"$file_raw_config"
+    curl -sL https://ghproxy.com/https://raw.githubusercontent.com/Oreomeow/VIP/main/Conf/Qinglong/config.sample.sh > "$file_raw_config"
     mv -b "$file_raw_config" "$dir_config"
     sed -ri "s/GithubProxyUrl=\"https\:\/\/ghproxy.com\/\"/GithubProxyUrl=\"${GithubProxyUrl}\"/g" "$file_config_config"
     sed -i "s/TG_BOT_TOKEN=\"\"/TG_BOT_TOKEN=\"${TG_BOT_TOKEN}\"/g" "$file_config_config"
     sed -i "s/TG_USER_ID=\"\"/TG_USER_ID=\"${TG_USER_ID}\"/g" "$file_config_config"
+    sed -i "s/TG_PROXY_HOST=\"\"/TG_PROXY_HOST=\"${TG_PROXY_HOST}\"/g" "$file_config_config"
+    sed -i "s/TG_PROXY_PORT=\"\"/TG_PROXY_PORT=\"${TG_PROXY_PORT}\"/g" "$file_config_config"
     sed -i "s/openCardBean=\"30\"/openCardBean=\"${openCardBean}\"/g" "$file_config_config"
 }
 
 update_extra() {
-    curl -sL https://git.io/extra.sh >"$file_raw_extra"
+    curl -sL https://ghproxy.com/https://raw.githubusercontent.com/Oreomeow/VIP/main/Tasks/qlrepo/extra.sh > "$file_raw_extra"
     mv -b "$file_raw_extra" "$dir_config"
     sed -i "s/CollectedRepo=(4)/CollectedRepo=(${CollectedRepo})/g" "$file_config_extra"
     sed -i "s/OtherRepo=()/OtherRepo=(${OtherRepo})/g" "$file_config_extra"
     sed -i "s/Ninja=\"on\"/Ninja=\"${Ninja}\"/" "$file_config_extra"
     sed -i '/NOWTIME=/a\\tcp \/ql\/config\/sendNotify.js \/ql\/scripts\/sendNotify.js' "$file_config_extra"
-    echo 'cat /ql/db/wskey.list >> /ql/config/wskey.list && :> /ql/db/wskey.list' >>"$file_config_extra"
+    # echo 'cat /ql/db/wskey.list >> /ql/config/wskey.list && :> /ql/db/wskey.list' >> $file_config_extra
 }
 
 update_code() {
-    curl -sL https://git.io/code.sh >"$file_raw_code"
+    curl -sL https://ghproxy.com/https://raw.githubusercontent.com/Oreomeow/VIP/main/Scripts/sh/Helpcode2.8/code.sh > "$file_raw_code"
     mv -b "$file_raw_code" "$dir_config"
     sed -i "s/repo=\$repo4/repo=\$repo${repoNum}/g" "$file_config_code"
     sed -i "/^HelpType=/c${HelpType}" "$file_config_code"
     sed -i "/^BreakHelpType=/c${BreakHelpType}" "$file_config_code"
     sed -i "/^BreakHelpNum=/c${BreakHelpNum}" "$file_config_code"
+    sed -i "/^package_name=/c${package_name}" "$file_config_code"
 }
 
 update_task_before() {
-    curl -sL https://git.io/task_before.sh >"$file_raw_task_before"
+    curl -sL https://ghproxy.com/https://raw.githubusercontent.com/Oreomeow/VIP/main/Scripts/sh/Helpcode2.8/task_before.sh > "$file_raw_task_before"
     mv -b "$file_raw_task_before" "$dir_config"
 }
 
@@ -85,7 +91,7 @@ random_cookie() {
 }
 
 update_notify() {
-    wget -O sendNotify.js https://raw.githubusercontent.com/ccwav/QLScript/main/sendNotify.js
+    wget -O sendNotify.js https://raw.githubusercontent.com/ccwav/QLScript2/main/sendNotify.js
     sed -ri 's/\\n\\n本通知 By ccwav Mod/\\n\\n本通知 By Oreo Mod/' "$file_config_notify_js"
 }
 
