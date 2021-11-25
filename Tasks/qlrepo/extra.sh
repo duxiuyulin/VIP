@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-## Mod: Build2021124V1
+## Mod: Build2021125V1
 ## 添加你需要重启自动执行的任意命令，比如 ql repo
 ## 安装node依赖使用 pnpm install -g xxx xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
-## 安装python依赖使用 pip3 install xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
+## 安装python依赖使用 pip3 install xxx（Build2021125V1 及以上版本的 extra.sh，可忽略）
 
 #------ 说明区 ------#
 ## 1. 拉取仓库
@@ -10,7 +10,7 @@
 ### （2）若运行过 1custom 一键脚本，点击运行即可
 ### （3）推荐配置：如下。自行在设置区填写编号
 ## 2. 安装依赖
-### （1）默认不安装，因为 Build 20210728-002 及以上版本的 code.sh 自动检查修复依赖
+### （1）默认不安装nodejs依赖，因为 Build 20210728-002 及以上版本的 code.sh 自动检查修复依赖
 ### （2）若需要在此处使用，请在设置区设置
 ## 3. Ninja
 ### （1）默认启动并自动更新
@@ -290,24 +290,13 @@ install_pl_mods() {
         fi
     done
 }
-
-case $dependencies in
-yes)
-    install_alpine_pkgs &
-    install_py_reqs &
-    install_js_pkgs_all &
-    install_pl_mods &
-    ;;
-*al*)
-    install_alpine_pkgs &
-    ;;
-*py*)
-    install_py_reqs &
-    ;;
-*js*)
-    install_js_pkgs_all &
-    ;;
-*pl*)
-    install_pl_mods &
-    ;;
-esac
+[[ $dependencies == yes ]] && {
+    install_alpine_pkgs
+    install_py_reqs
+    install_js_pkgs_all
+    install_pl_mods
+} &
+[[ $dependencies == *al* ]] && install_alpine_pkgs &
+[[ $dependencies == *py* ]] && install_py_reqs &
+[[ $dependencies == *js* ]] && install_js_pkgs_all &
+[[ $dependencies == *pl* ]] && install_pl_mods &
