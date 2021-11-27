@@ -34,6 +34,9 @@ Build 20211122-001
 2、添加 风之凌殇 大佬 魔改版 jdCookie.js 自动复制到 /ql/deps/路径的脚本。需提前将 魔改版 jdCookie.js 拷贝到 /ql/config/ 路径。
 
 [ 信物 : task_before.sh ]
+Build 20211126-002
+1、新增 轮换 Cookie 模式。详见 新版 config_sample.sh 环境变量说明。须搭配 config_sample.sh Build 20211126-001 及以上版本使用。
+
 Build 20211126-001
 1、修复 随机CK 和 优先CK 模式中多脚本间参数相互干涉的 BUG。
 
@@ -42,7 +45,7 @@ Build 20211125-002
 
 
 Build 20211125-001
-1、新增优先 Cookie 模式，即指定前 N 个Cookie 按顺序参加活动，第 N 个以后 Cookie 按随机顺序参加活动。
+1、新增 优先 Cookie 模式，即指定前 N 个Cookie 按顺序参加活动，第 N 个以后 Cookie 按随机顺序参加活动。
 
 Build 20211124-001
 1、配合二次修改魔改版 jdCookie.js 一些代码更新；
@@ -51,6 +54,9 @@ Build 20211122-001
 1、集成 风之凌殇 大佬 利用 Nodejs 解决 Argument list too long 的相关代码。须配合魔改版 jdCookie.js 使用；
 
 [ 信物 : config_sample.sh ]
+Build 20211126-001
+1、新增 轮换 Cookie 模式。详见 新版 环境变量说明。须搭配 task_before.sh Build 20211126-002 及以上版本使用。
+
 Build 20211125-002
 1、简化 随机CK 和 优先CK 这两种模式的环境变量填写(填写说明详见内页)。
 
