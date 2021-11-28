@@ -5,18 +5,33 @@ new Env('禁用重复任务');
 """
 
 import json
+import logging
 import os
 import sys
 import time
+import traceback
 
 import requests
 
+logger = logging.getLogger(name=None)  # 创建一个日志对象
+logging.Formatter("%(message)s")  # 日志内容格式化
+logger.setLevel(logging.INFO)  # 设置日志等级
+logger.addHandler(logging.StreamHandler())  # 添加控制台日志
+# logger.addHandler(logging.FileHandler(filename="text.log", mode="w"))  # 添加文件日志
+
+
 ip = "localhost"
-substr = os.getenv("Reserve", "Aaron-lv_sync")
+res_str = os.getenv("RESERVE", "Aaron-lv_sync")
+res_list = res_str.split("&")
+res_only = os.getenv("RES_ONLY", True)
+headers = {
+    "Accept": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
+}
 
 
-def loadSend():
-    print("加载推送功能")
+def load_send() -> None:
+    logger.info("加载推送功能中...")
     global send
     send = None
     cur_path = os.path.abspath(os.path.dirname(__file__))
@@ -24,114 +39,111 @@ def loadSend():
     if os.path.exists(cur_path + "/notify.py"):
         try:
             from notify import send
-        except Exception as e:
+        except Exception:
             send = None
-            print("加载通知服务失败~", e)
+            logger.info(f"❌加载通知服务失败!!!\n{traceback.format_exc()}")
 
 
-headers = {
-    "Accept": "application/json",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
-}
-
-
-def getTaskList():
+def get_tasklist() -> list:
+    tasklist = []
     t = round(time.time() * 1000)
-    url = "http://%s:5700/api/crons?searchValue=&t=%d" % (ip, t)
+    url = f"http://{ip}:5700/api/crons?searchValue=&t={t}"
     response = requests.get(url=url, headers=headers)
-    responseContent = json.loads(response.content.decode("utf-8"))
-    if responseContent["code"] == 200:
-        taskList = responseContent["data"]
-        return taskList
-    else:
-        # 没有获取到taskList，返回空
-        return []
+    datas = json.loads(response.content.decode("utf-8"))
+    if datas.get("code") == 200:
+        tasklist = datas.get("data")
+    return tasklist
 
 
-def getDuplicate(taskList):
-    wholeNames = {}
-    duplicateID = []
-    taskListTemp = []
-    for task in taskList:
-        if task["name"] in wholeNames.keys() and task["command"].find(substr) < 0:
-            duplicateID.append(task["_id"])
-        else:
-            taskListTemp.append(task)
-            wholeNames[task["name"]] = 1
-    return getDuplicateForOnlyRes(taskListTemp, duplicateID)
-
-
-def getDuplicateForOnlyRes(taskListTemp, duplicateID):
-    if len(duplicateID) == 0:
-        return duplicateID
-    duplicateIDTemp = []
-    for task in taskListTemp:
-        for taskTemp in taskListTemp:
+def get_duplicate_list(tasklist: list) -> tuple:
+    names = {}
+    ids = []
+    temps = []
+    for task in tasklist:
+        for res_str in res_list:
             if (
-                task["_id"] != taskTemp["_id"]
-                and task["name"] == taskTemp["name"]
-                and task["command"].find(substr) < 0
+                task.get("name") in names.keys()
+                and task.get("command").find(res_str) == -1
             ):
-                duplicateID.append(task["_id"])
-    return duplicateID
+                ids.append(task["_id"])
+            else:
+                temps.append(task)
+                names[task["name"]] = 1
+    return temps, ids
 
 
-def getData(duplicateID):
-    rawData = "["
+def reserve_task_only(temps: list, ids: list) -> list:
+    if len(ids) == 0:
+        return ids
+    for task1 in temps:
+        for task2 in temps:
+            for res_str in res_list:
+                if (
+                    task1["_id"] != task2["_id"]
+                    and task1["name"] == task2["name"]
+                    and task1["command"].find(res_str) == -1
+                ):
+                    ids.append(task1["_id"])
+    return ids
+
+
+def form_data(ids: list) -> list:
+    raw_data = "["
     count = 0
-    for id in duplicateID:
-        rawData += '"%s"' % id
-        if count < len(duplicateID) - 1:
-            rawData += ", "
+    for id in ids:
+        raw_data += f'"{id}"'
+        if count < len(ids) - 1:
+            raw_data += ", "
         count += 1
-    rawData += "]"
-    return rawData
+    raw_data += "]"
+    return raw_data
 
 
-def disableDuplicateTasks(duplicateID):
+def disable_duplicate_tasks(ids: list) -> None:
     t = round(time.time() * 1000)
-    url = "http://%s:5700/api/crons/disable?t=%d" % (ip, t)
-    data = json.dumps(duplicateID)
+    url = f"http://{ip}:5700/api/crons/disable?t={t}"
+    data = json.dumps(ids)
     headers["Content-Type"] = "application/json;charset=UTF-8"
     response = requests.put(url=url, headers=headers, data=data)
-    msg = json.loads(response.content.decode("utf-8"))
-    if msg["code"] != 200:
-        print("出错！，错误信息为：%s" % msg)
+    datas = json.loads(response.content.decode("utf-8"))
+    if datas.get("code") != 200:
+        logger.info(f"❌出错!!!错误信息为：{datas}")
     else:
-        print("成功禁用重复任务")
+        logger.info("🎉成功禁用重复任务~")
 
 
-def loadToken():
-    # cur_path = os.path.abspath(os.path.dirname(__file__))
-    # send("当前路径：",cur_path)
+def get_token() -> str or None:
     try:
         with open("/ql/config/auth.json", "r", encoding="utf-8") as f:
             data = json.load(f)
     except Exception:
-        send("无法获取token", "")
-    return data["token"]
+        logger.info(f"❌无法获取 token!!!\n{traceback.format_exc()}")
+        send("💔禁用重复任务失败", "无法获取 token!!!")
+        exit(1)
+    return data.get("token")
 
 
 if __name__ == "__main__":
-    print("开始！")
-    loadSend()
+    logger.info("===> 禁用重复任务开始 <===")
+    load_send()
     # 直接从 /ql/config/auth.json中读取当前token
-    token = loadToken()
-    # send("成功获取token!","")
-    headers["Authorization"] = "Bearer %s" % token
-    taskList = getTaskList()
-    # 如果仍旧是空的，则报警
-    if len(taskList) == 0:
-        print("无法获取taskList!")
-    duplicateID = getDuplicate(taskList)
-    before = "禁用前数量为：%d" % len(taskList)
-    print(before)
-    after = "禁用重复任务后，数量为:%d" % (len(taskList) - len(duplicateID))
-    print(after)
-    if len(duplicateID) == 0:
-        print("没有重复任务")
+    token = get_token()
+    headers["Authorization"] = f"Bearer {token}"
+    tasklist = get_tasklist()
+    # 如果仍是空的，则报警
+    if len(tasklist) == 0:
+        logger.info("❌无法获取 tasklist!!!")
+    temps, ids = get_duplicate_list(tasklist)
+    # 是否在重复任务中只保留设置的前缀
+    if res_only:
+        ids = reserve_task_only(temps, ids)
+    before = f"禁用前数量为：{len(tasklist)}"
+    logger.info(before)
+    after = f"禁用重复任务后，数量为：{len(tasklist) - len(ids)}"
+    logger.info(after)
+    if len(ids) == 0:
+        logger.info("😁没有重复任务~")
     else:
-        disableDuplicateTasks(duplicateID)
+        disable_duplicate_tasks(ids)
     if send:
-        send("禁用成功", "\n%s\n%s" % (before, after))
-        # print("禁用结束！")
+        send("💖禁用重复任务成功", f"\n{before}\n{after}")
