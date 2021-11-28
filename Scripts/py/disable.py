@@ -21,8 +21,8 @@ logger.addHandler(logging.StreamHandler())  # 添加控制台日志
 
 
 ip = "localhost"
-res_str = os.getenv("RESERVE", "Aaron-lv_sync")
-res_list = res_str.split("&")
+sub_str = os.getenv("RES_SUB", "Aaron-lv_sync")
+sub_list = sub_str.split("&")
 res_only = os.getenv("RES_ONLY", True)
 headers = {
     "Accept": "application/json",
@@ -55,48 +55,51 @@ def get_tasklist() -> list:
     return tasklist
 
 
+def filter_res_sub(tasklist: list) -> tuple:
+    filter_list = []
+    res_list = []
+    for task in tasklist:
+        for sub in sub_list:
+            if task.get("command").find(sub) == -1:
+                flag = False
+            else:
+                flag = True
+                break
+        if flag:
+            res_list.append(task)
+        else:
+            filter_list.append(task)
+    return filter_list, res_list
+
+
 def get_duplicate_list(tasklist: list) -> tuple:
     names = {}
     ids = []
-    temps = []
+    tem_tasks = []
+    cmds = []
+    tem_cmds = []
     for task in tasklist:
-        for res_str in res_list:
-            if (
-                task.get("name") in names.keys()
-                and task.get("command").find(res_str) == -1
-            ):
-                ids.append(task["_id"])
-            else:
-                temps.append(task)
-                names[task["name"]] = 1
-    return temps, ids
+        if task.get("name") in names.keys():
+            ids.append(task["_id"])
+            cmds.append(task.get("command"))
+        else:
+            tem_tasks.append(task)
+            names[task["name"]] = 1
+    return ids, cmds, tem_cmds, tem_tasks
 
 
-def reserve_task_only(temps: list, ids: list) -> list:
+def reserve_task_only(ids: list, cmds: list, tem_tasks: list, res_list: list) -> tuple:
     if len(ids) == 0:
         return ids
-    for task1 in temps:
-        for task2 in temps:
-            for res_str in res_list:
-                if (
-                    task1["_id"] != task2["_id"]
-                    and task1["name"] == task2["name"]
-                    and task1["command"].find(res_str) == -1
-                ):
-                    ids.append(task1["_id"])
-    return ids
-
-
-def form_data(ids: list) -> list:
-    raw_data = "["
-    count = 0
-    for id in ids:
-        raw_data += f'"{id}"'
-        if count < len(ids) - 1:
-            raw_data += ", "
-        count += 1
-    raw_data += "]"
-    return raw_data
+    res_cmds = []
+    for task1 in tem_tasks:
+        for task2 in res_list:
+            if task1["name"] == task2["name"]:
+                ids.append(task1["_id"])
+                cmds.append(task1.get("command"))
+            elif task1.get("command") not in res_cmds:
+                res_cmds.append(task1.get("command"))
+    return ids, cmds, res_cmds
 
 
 def disable_duplicate_tasks(ids: list) -> None:
@@ -126,24 +129,41 @@ def get_token() -> str or None:
 if __name__ == "__main__":
     logger.info("===> 禁用重复任务开始 <===")
     load_send()
-    # 直接从 /ql/config/auth.json中读取当前token
     token = get_token()
     headers["Authorization"] = f"Bearer {token}"
+
+    # 获取过滤后的任务列表
+    sub_str = "\n".join(sub_list)
+    logger.info(f"\n=== 你选择过滤的任务前缀为 ===\n{sub_str}")
     tasklist = get_tasklist()
-    # 如果仍是空的，则报警
     if len(tasklist) == 0:
         logger.info("❌无法获取 tasklist!!!")
-    temps, ids = get_duplicate_list(tasklist)
+        exit(1)
+    filter_list, res_list = filter_res_sub(tasklist)
+
+    ids, cmds, tem_cmds, tem_tasks = get_duplicate_list(filter_list)
     # 是否在重复任务中只保留设置的前缀
     if res_only:
-        ids = reserve_task_only(temps, ids)
-    before = f"禁用前数量为：{len(tasklist)}"
-    logger.info(before)
-    after = f"禁用重复任务后，数量为：{len(tasklist) - len(ids)}"
-    logger.info(after)
+        ids, cmds, res_cmds = reserve_task_only(ids, cmds, tem_tasks, res_list)
+    else:
+        res_cmds = tem_cmds
+        logger.info("你选择保留除了设置的前缀以外的其他任务")
+
+    sum = f"所有任务数量为：{len(tasklist)}"
+    filter = f"过滤的任务数量为：{len(res_list)}"
+    disable = f"禁用的任务数量为：{len(ids)}"
+    logging.info("\n=== 禁用数量统计 ===\n" + sum + "\n" + filter + "\n" + disable)
+
+    dis_str = "\n".join(cmds)
+    res_str = "\n".join(res_cmds)
+    dis_result = f"\n=== 本次禁用了以下任务 ===\n{dis_str}"
+    res_result = f"\n=== 本次保留了以下任务 ===\n{res_str}"
+    logger.info(dis_result)
+    logger.info(res_result)
+
     if len(ids) == 0:
         logger.info("😁没有重复任务~")
     else:
         disable_duplicate_tasks(ids)
     if send:
-        send("💖禁用重复任务成功", f"\n{before}\n{after}")
+        send("💖禁用重复任务成功", f"\n{sum}\n{filter}\n{disable}")
