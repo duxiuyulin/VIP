@@ -34,6 +34,22 @@ Build 20211122-001
 2、添加 风之凌殇 大佬 魔改版 jdCookie.js 自动复制到 /ql/deps/路径的脚本。需提前将 魔改版 jdCookie.js 拷贝到 /ql/config/ 路径。
 
 [ 信物 : task_before.sh ]
+Build 20211128-002
+1、新增 重组CK 前是否检测并剔除无效 CK 的相关代码。须搭配 config_sample.sh Build 20211128-002 及以上版本使用。
+
+Build 20211128-001
+1、修复 轮换模式下 参与轮换账号 数量为 0 的死循环逻辑；
+2、添加 参与轮换账号不足 2 个时 切换回正常 Cookie 模式的逻辑代码。
+
+Build 20211127-002
+1、新增 分段 Cookie 模式。详见 新版 config_sample.sh 环境变量说明。须搭配 config_sample.sh Build 20211127-002 及以上版本使用。
+
+Build 20211127-001-fix
+1、修复 轮换模式 自定义轮换数值较大时的一处计算错误。
+
+Build 20211127-001
+1、整合 随机、优先、轮换和组队模式为 重组 Cookie；优化全局模式与局部变量的填写方式。
+
 Build 20211126-002
 1、新增 轮换 Cookie 模式。详见 新版 config_sample.sh 环境变量说明。须搭配 config_sample.sh Build 20211126-001 及以上版本使用。
 
@@ -54,6 +70,15 @@ Build 20211122-001
 1、集成 风之凌殇 大佬 利用 Nodejs 解决 Argument list too long 的相关代码。须配合魔改版 jdCookie.js 使用；
 
 [ 信物 : config_sample.sh ]
+Build 20211128-002
+1、新增 重组CK 前是否检测并剔除无效 CK 的环境变量。须搭配 task_before.sh Build 20211128-002 及以上版本使用。
+
+Build 20211127-002
+1、新增 分段 Cookie 模式。详见 新版 环境变量说明。须搭配 task_before.sh Build 20211127-002 及以上版本使用。
+
+Build 20211127-001
+1、整合 随机、优先、轮换和组队模式为 重组 Cookie；优化全局模式与局部变量的填写方式。
+
 Build 20211126-001
 1、新增 轮换 Cookie 模式。详见 新版 环境变量说明。须搭配 task_before.sh Build 20211126-002 及以上版本使用。
 
