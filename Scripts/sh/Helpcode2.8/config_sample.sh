@@ -1,6 +1,6 @@
 ## Version: v2.8.0
 ## Date: 2021-06-20
-## Mod: Build20211128-002
+## Mod: Build20211129-001
 ## Update Content: 可持续发展纲要\n1. session管理破坏性修改\n2. 配置管理可编辑config下文件\n3. 自定义脚本改为查看脚本\n4. 移除互助相关
 
 ## 上面版本号中，如果第2位数字有变化，那么代表增加了新的参数，如果只有第3位数字有变化，仅代表更新了注释，没有增加新的参数，可更新可不更新
@@ -53,7 +53,7 @@ export BARK_SOUND=""
 ## 下方填写推送消息分组，默认为"QingLong"
 export BARK_GROUP="QingLong"
 
-## 3. Telegram 
+## 3. Telegram
 ## 下方填写自己申请@BotFather的Token，如10xxx4:AAFcqxxxxgER5uw
 export TG_BOT_TOKEN=""
 ## 下方填写 @getuseridbot 中获取到的纯数字ID
@@ -74,7 +74,7 @@ export TG_PROXY_AUTH=""
 ## 如需使用，请赋值代理地址链接，并自行解除下一行的注释
 export TG_API_HOST=""
 
-## 4. 钉钉 
+## 4. 钉钉
 ## 官方文档：https://developers.dingtalk.com/document/app/custom-robot-access
 ## 下方填写token后面的内容，只需 https://oapi.dingtalk.com/robot/send?access_token=XXX 等于=符号后面的XXX即可
 export DD_BOT_TOKEN=""
@@ -117,9 +117,9 @@ export PUSH_PLUS_USER=""
 ## esac
 
 ## 9. go-cqhttp
-## gobot_url 推送到个人QQ: http://127.0.0.1/send_private_msg  群：http://127.0.0.1/send_group_msg 
+## gobot_url 推送到个人QQ: http://127.0.0.1/send_private_msg  群：http://127.0.0.1/send_group_msg
 ## gobot_token 填写在go-cqhttp文件设置的访问密钥
-## gobot_qq 如果GOBOT_URL设置 /send_private_msg 则需要填入 user_id=个人QQ 相反如果是 /send_group_msg 则需要填入 group_id=QQ群 
+## gobot_qq 如果GOBOT_URL设置 /send_private_msg 则需要填入 user_id=个人QQ 相反如果是 /send_group_msg 则需要填入 group_id=QQ群
 ## go-cqhttp相关API https://docs.go-cqhttp.org/api
 export GOBOT_URL=""
 export GOBOT_TOKEN=""
@@ -148,18 +148,18 @@ export GOBOT_QQ=""
 ##         ;;
 ## esac
 case $1 in
-    *jd_fruit*)
-        TempBlockCookie=""
-        ;;
-    *jd_dreamFactory* | *jd_jdfactory*)
-        TempBlockCookie=""
-        ;;
-    *jd_jdzz* | *jd_joy*)
-        TempBlockCookie=""
-        ;;
-    *)
-        TempBlockCookie=""
-        ;;
+*jd_fruit*)
+    TempBlockCookie=""
+    ;;
+*jd_dreamFactory* | *jd_jdfactory*)
+    TempBlockCookie=""
+    ;;
+*jd_jdzz* | *jd_joy*)
+    TempBlockCookie=""
+    ;;
+*)
+    TempBlockCookie=""
+    ;;
 esac
 
 ## 10.2 按用户名(pt_pin)屏蔽
@@ -183,18 +183,18 @@ esac
 ##         ;;
 ## esac
 case $1 in
-    *jd_fruit*)
-        TempBlockPin=""
-        ;;
-    *jd_dreamFactory* | *jd_jdfactory*)
-        TempBlockPin=""
-        ;;
-    *jd_jdzz* | *jd_joy*)
-        TempBlockPin=""
-        ;;
-    *)
-        TempBlockPin=""
-        ;;
+*jd_fruit*)
+    TempBlockPin=""
+    ;;
+*jd_dreamFactory* | *jd_jdfactory*)
+    TempBlockPin=""
+    ;;
+*jd_jdzz* | *jd_joy*)
+    TempBlockPin=""
+    ;;
+*)
+    TempBlockPin=""
+    ;;
 esac
 
 ## 11 重组Cookie
@@ -208,7 +208,7 @@ esac
 ###           ②支持黑名单模式(即不使用该模式，详见 局部模式环境变量 recombin_ck_envs 说明)；
 
 ## 11.1 全局模式选项
-### 赋值要求：①只能填 1 2 3 4 ，分别表示随机、优先、轮换、组队四种模式，对全部脚本有效(除非 recombin_ck_envs 另有设定)；
+### 赋值要求：①只能填 1 2 3 4 5，分别表示随机、优先、轮换、组队、分段 5 种模式，对全部脚本有效(除非 recombin_ck_envs 另有设定)；
 ###           ②若填写为其他内容，则全部账号按正常顺序参加活动(除非 recombin_ck_envs 另有设定)；
 Recombin_CK_Mode=""
 
@@ -216,22 +216,24 @@ Recombin_CK_Mode=""
 ### 释义：①在随机模式下：表示随意抽取 N 个账号随机顺序参加活动；
 ###       ②在优先模式和轮换模式下：表示前 N 个账号固定按正常顺序参加活动；
 ###       ③在组队模式下：表示每支队伍的成员数量；
-###       ④在分段模式下：表示每个分段的账号数量；
-### 赋值要求：①只能填不大于 Cookie 总数的正整数，对全部脚本有效(除非 recombin_ck_envs 另有设定)；
-###           ②随机模式和分段模式下：若填写数值大于或等于 Cookie 总数，则全部账号随机顺序参加活动(除非 recombin_ck_envs 另有设定)；
-###           ③若填写为其他内容，则全部账号按正常顺序参加活动(除非 recombin_ck_envs 另有设定)；
+###       ④在分段模式下：表示前 N 个账号固定按正常顺序参加活动；
+### 赋值要求：①只能填不大于 Cookie 总数的 0 或正整数，对全部脚本有效(除非 recombin_ck_envs 另有设定)；
+###           ②随机模式和优先模式下：若填写数值为 0 或大于等于 Cookie 总数，则全部账号随机顺序参加活动；
+###           ③轮换模式下：若填写数值为 0 ，表示全部账号参加轮换；若填写数值为大于等于 Cookie 总数，则全部账号切换回正常顺序参加活动；
+###           ④组队模式下：若填写数值为 0 或其他内容，则全部账号切换回正常顺序参加活动。
+###           ⑤分段模式下：若填写数值为 0 ，表示全部账号参与分段；若填写数值为大于等于 Cookie 总数，则全部账号切换回正常顺序参加活动；
 Recombin_CK_ARG1=""
 
 ### 模式参数 2
-### 释义：①在随机模式和优先模式下：无意义；
+### 释义：①随机模式和优先模式下：无意义；
 ###       ②轮换模式下：表示自定义 N 个账号/天参加轮换；
 ###       ③在组队模式下：表示每个账号发起组队的次数；
 ###       ③在组队模式下：表示每个账号发起组队的次数；
-###       ④在分段模式下：表示每个分段启动活动脚本的延迟时间，单位：秒；
-### 赋值要求：①轮换模式下：只能填不大于参与轮换账号数量(即：总Cookie数量-固定Cookie数量)的正整数，对全部脚本有效(除非 recombin_ck_envs 另有设定)；
-###           ②轮换模式下：若填写为其他内容或留空，则自动调整为按天计算轮换账号的数量(即：轮换账号数量÷当月总天数的商值，取下整数)，对全部脚本有效(除非 recombin_ck_envs 另有设定)；
-###           ③组队模式下：若填写为其他内容或留空，则自动退出模式。
-###           ④分段模式下：若填写为其他内容或留空，则自动退出模式。(为了避免多段并发运行脚本造成死机)；
+###       ④在分段模式下：表示每个分段的账号数量；
+### 赋值要求：①轮换模式下：只能填不大于参与轮换账号数量(即：总Cookie数量-固定Cookie数量)的正整数；
+###           ②轮换模式下：若填写为其他内容或留空，则自动调整为按天计算轮换账号的数量(即：轮换账号数量÷当月总天数的商值，取上整数)；
+###           ③组队模式下：若填写为其他内容或留空，则全部账号切换回正常顺序参加活动。
+###           ④分段模式下：只能填大于固定账号数量且不大于 Cookie 总数的数值。若填写为其他内容或留空，则全部账号切换回正常顺序参加活动。
 Recombin_CK_ARG2=""
 
 ## 重组Cookie前是否剔除失效Cookie
@@ -255,8 +257,9 @@ Remove_Void_CK=""
 ###                                              jd_pigPet@3@5          使用模式：3轮换，前5个CK顺序固定，根据CK总数和当月天数自动计算每天轮换CK数量
 ###                                              jd_plantBean@3@7@4     使用模式：3轮换，前7个CK顺序固定，每天轮换4个CK
 ###                                              jd_jxlhb@4@80@1        使用模式：4组队，队伍成员数量80，每个账号组队1次
-###                                              jd_islogin_xh@5@10@15  使用模式：5分段，每段成员数量10，每段延迟时间为15秒
-# recombin_ck_envs="jd_fruit@2@5&jd_pet@2@5&jd_plantBean@2@5&jd_dreamFactory@2@5&jd_jdfactory@2@5&jd_crazy_joy@2@5&jd_jdzz@2@5&jd_jxnc@2@5&jd_bookshop@2@5&jd_cash@2@5&jd_sgmh@2@5&jd_cfd@2@5&jd_health@2@5&jd_carnivalcity@2@5&jd_city@2@5&jd_moneyTree_heip@2@5&jd_jxlhb@4@80@1&jd_88hb@4@80@1&Check&jd_islogin_xh&bean_change"
+###                                              jd_islogin_xh@5@4@8    使用模式：5分段，前4个CK顺序固定，每段成员数量8，各分段并发执行启动脚本
+###                                              jd_islogin_xh@5@4@8@15 使用模式：5分段，前4个CK顺序固定，每段成员数量8，每段启动脚本的延迟时间为15秒。第四个表示每个分段启动活动脚本的延迟时间，单位：秒；
+# recombin_ck_envs="jd_fruit@2@5&jd_pet@2@5&jd_plantBean@2@5&jd_dreamFactory@2@5&jd_jdfactory@2@5&jd_crazy_joy@2@5&jd_jdzz@2@5&jd_jxnc@2@5&jd_bookshop@2@5&jd_cash@2@5&jd_sgmh@2@5&jd_cfd@2@5&jd_health@2@5&jd_carnivalcity@2@5&jd_city@2@5&jd_moneyTree_heip@2@5&jd_jxlhb@3@5&jd_88hb@3@5&Check&jd_islogin_xh&bean_change&wskey&code"
 
 ## 其他需要的变量，脚本中需要的变量使用 export 变量名= 声明即可
 
@@ -329,7 +332,7 @@ export FRUIT_BEAN_CARD="true"
 ## 12、是否取关商品。环境变量内容的意思依次是是否取关全部商品(0表示一个都不),是否取关全部店铺数(0表示一个都不),遇到此商品不再进行取关,遇到此店铺不再进行取关
 export UN_SUBSCRIBES="300,300,,"
 ## 12、jd_unsubscribe这个任务是用来取关每天做任务关注的商品和店铺，默认在每次运行时取关20个商品和20个店铺
-### 如果取关数量不够，可以根据情况增加，还可以设置 jdUnsubscribeStopGoods 和 jdUnsubscribeStopShop 
+### 如果取关数量不够，可以根据情况增加，还可以设置 jdUnsubscribeStopGoods 和 jdUnsubscribeStopShop
 ### 商品取关数量
 export goodPageSize="30"
 ### 店铺取关数量
@@ -373,7 +376,7 @@ export cash_zlzh="$(echo $JD_COOKIE | sed "s/&/ /g; s/\S*pt_pin=\([^;]\+\);\S*/\
 ## 4、京喜工厂开团助力 for Python
 ### 支持指定账号开团，跑1次脚本默认开3次团，如未指定账号默认给账号一开团。
 ### 变量ENV 指定开团账号。可填用户名 或 pt_pin 的值。示例：export jxgc_kaituan="用户1&用户2"
-export jxgc_kaituan="$(echo $JD_COOKIE | sed "s/&/ /g; s/\S*pt_pin=\([^;]\+\)\S*;/\1/g; s/ /\&/g;" | awk 'BEGIN{for(i=0;i<10;i++)hex[i]=i;hex["A"]=hex["a"]=10;hex["B"]=hex["b"]=11;hex["C"]=hex["c"]=12;hex["D"]=hex["d"]=13;hex["E"]=hex["e"]=14;hex["F"]=hex["f"]=15;}{gsub(/\+/," ");i=$0;while(match(i,/%../)){;if(RSTART>1);printf"%s",substr(i,1,RSTART-1);printf"%c",hex[substr(i,RSTART+1,1)]*16+hex[substr(i,RSTART+2,1)];i=substr(i,RSTART+RLENGTH);}print i;}')"  ## 支持中文用户名
+export jxgc_kaituan="$(echo $JD_COOKIE | sed "s/&/ /g; s/\S*pt_pin=\([^;]\+\)\S*;/\1/g; s/ /\&/g;" | awk 'BEGIN{for(i=0;i<10;i++)hex[i]=i;hex["A"]=hex["a"]=10;hex["B"]=hex["b"]=11;hex["C"]=hex["c"]=12;hex["D"]=hex["d"]=13;hex["E"]=hex["e"]=14;hex["F"]=hex["f"]=15;}{gsub(/\+/," ");i=$0;while(match(i,/%../)){;if(RSTART>1);printf"%s",substr(i,1,RSTART-1);printf"%c",hex[substr(i,RSTART+1,1)]*16+hex[substr(i,RSTART+2,1)];i=substr(i,RSTART+RLENGTH);}print i;}')" ## 支持中文用户名
 ## 5、入会开卡
 ### int，入会送豆满足此值，否则不入会
 export openCardBean="30"
@@ -417,7 +420,7 @@ export JDJR_validator_Count="25"
 ### 新增热气球接客 默认每次运行执行10次
 export gua_wealth_island_serviceNum="500"
 ## 4、修复点点券
-### 新增显示有多少个非法请求 可以开通知 
+### 新增显示有多少个非法请求 可以开通知
 export DDQ_NOTIFY_CONTROL="" ##不填或false为通知，true为不通知
 ## 5、24 及之后的开卡变量
 export guaopencard_All="true"
@@ -429,7 +432,7 @@ export guaunknownTask_card_All="true"
 export gua_carnivalcity_draw="true"
 export guaopenwait_All="true"
 export guaopencard_draw45="3"
-for ((s=0; s<=100; s++)); do
+for ((s = 0; s <= 100; s++)); do
     export guaopencard$s="3"
     export guaopencard_draw$s="3"
     export guaopencard_addSku$s="true"
@@ -442,7 +445,7 @@ export JD_CITY_HELPSHARE="false" # false 优先内部助力 | true 优先助力�
 ## 1、签到领现金兑换
 ### 填写 pt_pin@金额，pt_pin为用户名，可以在 COOKIES 中提取；金额为 2 或 10，例如 LiLei@2 或 HanMeimei@10。多值用 & 连接，例如 LiLei@2&HanMeimei@10
 ### export exchangeAccounts="$(echo $JD_COOKIE | sed "s/&/\n/g; s/\S*pt_pin=\([^;]\+\);\S*/\1@10/g; s/\n/\&/g;")"  ##兑10元现金，比较难兑
-export exchangeAccounts="$(echo $JD_COOKIE | sed "s/&/ /g; s/\S*pt_pin=\([^;]\+\);\S*/\1@2/g; s/ /&/g;")"           ##兑2元现金
+export exchangeAccounts="$(echo $JD_COOKIE | sed "s/&/ /g; s/\S*pt_pin=\([^;]\+\);\S*/\1@2/g; s/ /&/g;")" ##兑2元现金
 ## 2、愤怒的现金
 ### 极速助力，打击黑产盗取现金的犯罪行为。默认向前助力9个账号，若要指定被助力账号，需cashHelpPins环境变量中填入需要助力的pt_pin，有多个请用@符号连接。
 export cashHelpPins="$(echo $JD_COOKIE | sed "s/&/\n/g; s/\S*pt_pin=\([^;]\+\);\S*/\1/g; s/\n/@/g;")"
@@ -509,9 +512,9 @@ export CleanUsers=""
 ### 当有自动禁用或自动启用事件发生才会发送通知，如果要每次都通知则需设定变量
 ### 自动检测账号是否正常，不正常的自动禁用，正常的如果是禁用状态则自动启用
 export CHECKCK_SHOWSUCCESSCK="false" ##显示正常CK，true为显示
-export CHECKCK_CKALWAYSNOTIFY="true" ##通知CK状态，true为永远通知 
-export CHECKCK_CKAUTOENABLE="false" ##自动启用CK，false为停用
-export CHECKCK_CKNOWARNERROR="true" ##服务器空数据等错误不触发通知，false为通知
+export CHECKCK_CKALWAYSNOTIFY="true" ##通知CK状态，true为永远通知
+export CHECKCK_CKAUTOENABLE="false"  ##自动启用CK，false为停用
+export CHECKCK_CKNOWARNERROR="true"  ##服务器空数据等错误不触发通知，false为通知
 ## [2] jd_bean_change.js
 ### 自用的京东资产变动查询加强版
 ### 京东资产变动 + 白嫖榜 + 京东月资产变动,注意事项:如果你遇到TG Bark报错，那是因为报文过长，请使用分段通知功能.
@@ -519,24 +522,24 @@ export CHECKCK_CKNOWARNERROR="true" ##服务器空数据等错误不触发通知
 ### 例：export BEANCHANGE_PERSENT="10"总共有22个账号,结果会分成3条推送通知，1~10为第一条推送，11~20为第二条推送，剩余的为第三条推送
 export BEANCHANGE_PERSENT="10" ##10合1
 ### 2. BEANCHANGE_USERGP2 BEANCHANGE_USERGP3 BEANCHANGE_USERGP4  根据Pt_Pin的值进行分组通知
-### 注意：分组通知会强制禁用BEANCHANGE_PERSENT变量!	
+### 注意：分组通知会强制禁用BEANCHANGE_PERSENT变量!
 ### 分组通知的通知标题为 脚本名+"#"+分组数值
 ### 主要用于搭配通知脚本的分组通知使用.
 ### 3. BEANCHANGE_ENABLEMONTH
-### 每月1号17点后如果执行资产查询，开启京东月资产变动的统计和推送.	
-### 拆分通知和分组通知的变量都可以兼容.	
-### 标题按照分组分别为 京东月资产变动 京东月资产变动#2 京东月资产变动#3 	
+### 每月1号17点后如果执行资产查询，开启京东月资产变动的统计和推送.
+### 拆分通知和分组通知的变量都可以兼容.
+### 标题按照分组分别为 京东月资产变动 京东月资产变动#2 京东月资产变动#3
 ### 开启 :  export BEANCHANGE_ENABLEMONTH="true"
 ### 4.BEANCHANGE_ALLNOTIFY
 ### 设置推送置顶公告，&表示换行，公告会出现在资产通知中(包括一对一).
-### 	例子 :  export BEANCHANGE_ALLNOTIFY="你好&今天天气不错...&&哥斯拉大战金刚...."  
+### 	例子 :  export BEANCHANGE_ALLNOTIFY="你好&今天天气不错...&&哥斯拉大战金刚...."
 ### 	显示:
-### 	
+###
 ### 	【✨✨✨✨公告✨✨✨✨】
 ### 	 你好
 ### 	 今天天气不错...
-### 	 
-### 	 哥斯拉大战金刚.... 
+###
+### 	 哥斯拉大战金刚....
 ### 5. BEANCHANGE_ENABLEMONTH
 ### 当设定BEANCHANGE_ExJxBeans="true"且时间在17点之后，会自动将临期京豆兑换成喜豆续命.
 export BEANCHANGE_ExJxBeans="true"
@@ -557,8 +560,8 @@ export TG_USER_ID2=""
 ### 3. NOTIFY_SHOWNAMETYPE
 ### 例：账号名:ccwav  别名:ccwav的别名  Remark:代码玩家
 #export NOTIFY_SHOWNAMETYPE="1"    ##效果: 账号名称：代码玩家
-export NOTIFY_SHOWNAMETYPE="2"     ##效果: 账号名称：ccwav的别名(代码玩家)
-#export NOTIFY_SHOWNAMETYPE="3"    ##不做处理，效果: 账号名称：ccwav   
+export NOTIFY_SHOWNAMETYPE="2" ##效果: 账号名称：ccwav的别名(代码玩家)
+#export NOTIFY_SHOWNAMETYPE="3"    ##不做处理，效果: 账号名称：ccwav
 #export NOTIFY_SHOWNAMETYPE="4"    ##不做处理，效果: 账号名称：ccwav(代码玩家)
 ### 4. NOTIFY_SKIP_NAMETYPELIST
 ### 单独指定某些脚本不做NOTIFY_SHOWNAMETYPE变量处理。例：export NOTIFY_SKIP_NAMETYPELIST="东东农场&东东工厂"
@@ -588,7 +591,7 @@ export NOTIFY_CUSTOMNOTIFY=""
 export PUSH_PLUS_TOKEN_hxtrip=""
 export PUSH_PLUS_USER_hxtrip=""
 ### 12. jd_joy_reward_Mod.js 宠汪汪积分兑换有就换版
-export JOY_GET20WHEN16="true"  ##控制16点才触发20京豆兑换.
+export JOY_GET20WHEN16="true" ##控制16点才触发20京豆兑换.
 ### 13. CK失效时执行脚本
 export NOTIFY_CKTASK="ccwav_QLScript2_jd_CheckCK.js"
 ### 14. 用 WxPusher 进行一对一推送
@@ -611,7 +614,6 @@ export NOTIFY_CKTASK="ccwav_QLScript2_jd_CheckCK.js"
 ### 15. NOTIFY_SKIP_TEXT
 ### 如果此变量(&隔开)的关键字在通知内容里面存在,则屏蔽不发送通知.
 ### 例子 :  export NOTIFY_SKIP_TEXT="忘了种植&异常"
-
 
 # X1a0He 环境变量
 ## 1、简化版京东日资产变动通知
@@ -656,8 +658,8 @@ export JD_UNSUB_INTERVAL="3000"
 export JD_UNSUB_PLOG="true"
 
 # jiulan 环境变量
-export JOYPARK_JOY_START="120"     # 只做前几个CK
-export JOY_COIN_MAXIMIZE="1"       # 最大化硬币收益，如果合成后全部挖土后还有空位，则开启此模式（默认关闭） 0关闭 1开启
+export JOYPARK_JOY_START="120" # 只做前几个CK
+export JOY_COIN_MAXIMIZE="1"   # 最大化硬币收益，如果合成后全部挖土后还有空位，则开启此模式（默认关闭） 0关闭 1开启
 
 # ddo
 export JD_CITY_HELPPOOL="true"
