@@ -119,13 +119,16 @@ def reserve_task_only(
         return tem_ids
 
     logger.info("\n=== 最终筛选开始 ===")
+    task3 = None
     for task1 in tem_tasks:
         for task2 in res_list:
             if task1.get("name") == task2.get("name"):
                 dup_ids.append(task1.get("_id"))
                 logger.info(f"【✅保留】{task2.get('command')}")
-                logger.info(f"【🚫禁用】{task1.get('command')}")
-                logger.info("")
+                task3 = task1
+        if task3:
+            logger.info(f"【🚫禁用】{task3.get('command')}\n")
+            task3 = None
     logger.info("=== 最终筛选结束 ===")
     return dup_ids
 
