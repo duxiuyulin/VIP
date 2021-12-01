@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-## Mod: Build2021125V1
+## Mod: Build2021201V1
 ## 添加你需要重启自动执行的任意命令，比如 ql repo
 ## 安装node依赖使用 pnpm install -g xxx xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
 ## 安装python依赖使用 pip3 install xxx（Build2021125V1 及以上版本的 extra.sh，可忽略）
@@ -18,9 +18,10 @@
 
 #------ 设置区 ------#
 # shellcheck disable=SC2005
-## 1. 拉取仓库编号设置，默认 shufflewzc 仓库
+## 1. 拉取仓库或脚本编号设置，默认 shufflewzc 仓库
 CollectedRepo=(4) ##示例：CollectedRepo=(2 4 6)
-OtherRepo=()      ##示例：OtherRepo=(1 3)
+OtherRepo=()      ##示例：OtherRepo=(1 3 0)
+RawScript=(1 2)   ##示例：RawScript=(1 2)
 ## 2. 是否安装依赖和安装依赖包的名称设置
 dependencies="al py pl" ##yes为全部安装，no为不安装，al为安装alpine依赖，py为安装python依赖，js为安装nodejs依赖，pl为安装perl依赖
 alpine_pkgs="bash curl gcc git jq libffi-dev make musl-dev openssl-dev perl perl-app-cpanminus perl-dev py3-pip python3 python3-dev wget"
@@ -35,42 +36,45 @@ Ninja="on" ##up为更新，on为启动，down为不运行
 一、集成仓库（Collected Repositories)
 2-JDHelloWorld
 3-he1pu
-4-shufflewzc
+4-shufflewzc/faker2
 6-Aaron-lv
-7-yuannian1112
+8-shufflewzc/faker3
 二、其他仓库（Other Repositories）
 1-passerby-b
 2-curtinlv
 3-smiek2221
 4-cdle
-5-ZCY01
-6-whyour/hundun
-7-moposmall
-8-Ariszy (Zhiyi-N)
-9-photonmang
-10-jiulan
-12-star261
-13-Wenmoux
-14-Tsukasa007
-15-ccwav
+5-jiulan
+6-star261
+7-Tsukasa007
+8-mmnvnmm
+9-X1a0He
+10-chianPLA
+11-hyzaw
+12-Zy143L/wskey
+13-Mashiro2000/HeyTapTask
+0-ccwav
+三、单拉脚本（Raw Scripts）
+1-禁用重复任务 by Oreomeow
+2-修复脚本依赖文件 by spiritLHL
 EOF
 
 #------ 代码区 ------#
-# 🌱拉取仓库
+# 🌱拉取仓库或脚本
 CR2() {
-    ql repo https://github.com/JDHelloWorld/jd_scripts.git "jd_|jx_|getJDCookie" "activity|backUp|Coupon|enen|update|test" "^jd[^_]|USER|^TS|utils|notify|env|package|ken.js"
+    ql repo https://github.com/JDHelloWorld/jd_scripts.git "jd_|jx_|getJDCookie" "backUp" "^jd[^_]|USER|utils|sendNotify|^TS|JD_"
 }
 CR3() {
-    ql repo https://github.com/he1pu/JDHelp.git "jd_|jx_|getJDCookie" "Coupon|update" "^jd[^_]|USER|^sign|^ZooFaker|utils"
+    ql repo https://github.com/he1pu/JDHelp.git "jd_|jx_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|utils|sendNotify|ZooFaker|JDJRValidator_|^sign"
 }
 CR4() {
-    ql repo https://github.com/shufflewzc/faker2.git "jd_|jx_|gua_|jddj_|getJDCookie" "activity|backUp|Coupon|update" "^jd[^_]|USER|utils|function|^JS|^TS|^JDJRValidator_Pure|^ZooFaker|^sign|ql"
+    ql repo https://github.com/shufflewzc/faker2.git "jd_|jx_|gua_|jddj_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|sendNotify|function|utils|JDJRValidator_|ZooFaker|^sign"
 }
 CR6() {
-    ql repo https://github.com/Aaron-lv/sync.git "jd_|jx_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|utils" "jd_scripts"
+    ql repo https://github.com/Aaron-lv/sync.git "jd_|jx_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|utils|sendNotify|JD_" "jd_scripts"
 }
-CR7() {
-    ql repo https://github.com/yuannian1112/jd_scripts.git "jd_|jx_|getJDCookie" "activity|backUp" "^jd[^_]|USER|utils"
+CR8() {
+    ql repo https://github.com/shufflewzc/faker3.git "jd_|jx_|gua_|jddj_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|sendNotify|function|utils|JDJRValidator_|ZooFaker|^sign"
 }
 for i in "${CollectedRepo[@]}"; do
     CR"$i"
@@ -78,53 +82,61 @@ for i in "${CollectedRepo[@]}"; do
 done
 
 OR1() {
-    ql repo https://github.com/passerby-b/JDDJ.git "jddj_" "scf_test_event|jddj_fruit_code.js|jddj_getck.js|jd_|jddj_cookie"
+    ql repo https://github.com/passerby-b/JDDJ.git "jddj_" "_getck" "^jd[^_]|jddj_cookie|sendNotify"
 }
 OR2() {
-    ql repo https://github.com/curtinlv/JD-Script.git "jd_"
+    ql repo https://github.com/curtinlv/JD-Script.git "jd_" "jd_cookie" "^jd[^_]|sendNotify|OpenCard|getFollowGifts|getJDCookie"
 }
 OR3() {
-    ql repo https://github.com/smiek2121/scripts.git "jd_|gua_" "" "^MovementFaker|^JDJRValidator|^ZooFaker|^sign|^cleancart"
+    ql repo https://github.com/smiek2121/scripts.git "jd_|gua_" "" "^jd[^_]|USER|utils|sendNotify|ZooFaker|JDJRValidator_|^sign|cleancart_"
 }
 OR4() {
-    ql repo https://github.com/cdle/xdd.git "jd_" "disposable|expired|jdc"
+    ql repo https://github.com/cdle/carry.git "jd_|jddj_" "share_code" "^jd[^_]|USER|sendNotify"
 }
 OR5() {
-    ql repo https://github.com/ZCY01/daily_scripts.git "jd_"
+    ql repo https://github.com/jiulan/platypus.git "jd_|jx_" "vpn|overdue"
 }
 OR6() {
-    ql repo https://github.com/whyour/hundun.git "quanx" "tokens|caiyun|didi|donate|fold|Env"
-}
-OR7() {
-    ql repo https://github.com/moposmall/Script.git "Me"
-}
-OR8() {
-    ql repo https://github.com/Ariszy/Private-Script.git "JD"
-}
-OR9() {
-    ql repo https://github.com/photonmang/quantumultX.git "JDscripts"
-}
-OR10() {
-    ql repo https://github.com/jiulan/platypus.git "jd_|jx_" "" "overdue" "main"
-}
-OR11() {
-    ql repo https://github.com/panghu999/panghu.git "jd_"
-}
-OR12() {
     ql repo https://github.com/star261/jd.git "jd_|star" "" "code" "main"
 }
+OR7() {
+    ql repo https://github.com/Tsukasa007/my_script.git "jd_|jx_|smzdm" "backup" "^jd[^_]|USER|sendNotify"
+}
+OR8() {
+    ql repo https://github.com/mmnvnmm/omo.git "jd_|rush_|bean_"
+}
+OR9() {
+    ql repo https://github.com/X1a0He/jd_scripts_fixed.git "jd_" "" "^jd[^_]"
+}
+OR10() {
+    ql repo https://github.com/chianPLA/xiaoshou.git
+}
+OR11() {
+    ql repo https://github.com/hyzaw/scripts.git "jd_|ql_"
+}
+OR12() {
+    ql repo https://github.com/Zy143L/wskey.git "wskey"
+}
 OR13() {
-    ql repo https://github.com/Wenmoux/scripts.git "other|jd" "" "" "wen"
+    ql repo https://github.com/Mashiro2000/HeyTapTask.git "" "Backup|index|HT.*|sendNotify" "HT_config|sendNotify"
 }
-OR14() {
-    ql repo https://github.com/Tsukasa007/my_script.git "jd_|jx_" "jdCookie|USER_AGENTS|sendNotify|backup" "" "master"
-}
-OR15() {
-    ql repo https://github.com/ccwav/QLScript2.git "jd_" "NoUsed" "ql|utils"
+OR0() {
+    ql repo https://github.com/ccwav/QLScript2.git "jd_" "NoUsed" "ql|sendNotify|utils|USER|jdCookie"
 }
 for i in "${OtherRepo[@]}"; do
     OR"$i"
     sleep 5
+done
+
+RS1() {
+    ql raw https://raw.githubusercontent.com/Oreomeow/VIP/main/Scripts/py/disable.py
+}
+RS2() {
+    ql raw https://raw.githubusercontent.com/spiritLHL/qinglong_auto_tools/master/scripts_check_dependence.py
+}
+for i in "${RawScript[@]}"; do
+    RS"$i"
+    sleep 2
 done
 
 # 🍪Ninja
