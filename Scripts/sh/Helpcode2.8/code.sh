@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Build 20211129-001-test
+## Build 20211202-001-test
 
 ## 导入通用变量与函数
 dir_shell=/ql/shell
@@ -630,8 +630,8 @@ update_help() {
 }
 
 check_jd_cookie() {
-    local test_connect="$(curl -I -s --connect-timeout 5 https://bean.m.jd.com/bean/signIndex.action -w %{http_code} | tail -n1)"
-    local test_jd_cookie="$(curl -s --noproxy "*" "https://bean.m.jd.com/bean/signIndex.action" -H "cookie: $1")"
+    local test_connect="$(curl -I -s --connect-timeout 5 --retry 3 --noproxy "*" https://bean.m.jd.com/bean/signIndex.action -w %{http_code} | tail -n1)"
+    local test_jd_cookie="$(curl -s --connect-timeout 5 --retry 3 --noproxy "*" "https://bean.m.jd.com/bean/signIndex.action" -H "cookie: $1")"
     if [ "$test_connect" -eq "302" ]; then
         [[ "$test_jd_cookie" ]] && echo "(COOKIE 有效)" || echo "(COOKIE 已失效)"
     else
@@ -777,13 +777,13 @@ install_deps_scripts() {
     for ((i = 0; i < ${#scripts_url[*]}; i++)); do
         [[ ${switch_status[i]} = "on" ]] && download_scripts ${scripts_url[i]} ${scripts_name[i]}
         [[ -d $dir_dep && -f $dir_config/${scripts_name[i]} ]] && cp -rf $dir_config/${scripts_name[i]} $dir_dep
-        [[ -f $dir_config/${scripts_name[i]} ]] && find $dir_scripts -type f -name ${scripts_name[i]} | xargs -n 1 cp -rf $dir_config/${scripts_name[i]} && cp -rf $dir_config/${scripts_name[i]} $dir_scripts
+        [[ -f $dir_config/${scripts_name[i]} ]] && find $dir_scripts ! \( -path "*JDHelloWorld*" -o -path "*ccwav*" \) -type f -name ${scripts_name[i]} | xargs -n 1 cp -rf $dir_config/${scripts_name[i]} && cp -rf $dir_config/${scripts_name[i]} $dir_scripts
     done
 }
 
 ## 执行并写入日志
 kill_proc "code.sh" "grep|$$" >/dev/null 2>&1
-install_deps_scripts &
+#install_deps_scripts &
 [[ $FixDependType = "1" ]] && [[ "$ps_num" -le $proc_num ]] && install_dependencies_all >/dev/null 2>&1 &
 latest_log=$(ls -r $dir_code | head -1)
 latest_log_path="$dir_code/$latest_log"
@@ -798,6 +798,6 @@ update_help
 ## 魔改版 jdCookie.js 复制到 /ql/deps/。仅支持v2.10.8及以上版本的青龙
 [[ -d $dir_dep && -f $dir_config/jdCookie.js ]] && cp -rf $dir_config/jdCookie.js $dir_dep
 ## 魔改版 jdCookie.js 覆盖到 /ql/scripts/及子路径下的所有 jdCookie.js。支持v2.10.8 以下版本的青龙
-[[ -f $dir_config/jdCookie.js ]] && find $dir_scripts -type f -name jdCookie.js | xargs -n 1 cp -rf $dir_config/jdCookie.js && cp -rf $dir_config/jdCookie.js $dir_scripts
+[[ -f $dir_config/jdCookie.js ]] && find $dir_scripts ! \( -path "*JDHelloWorld*" -o -path "*ccwav*" \) -type f -name jdCookie.js | xargs -n 1 cp -rf $dir_config/jdCookie.js && cp -rf $dir_config/jdCookie.js $dir_scripts
 
 exit
