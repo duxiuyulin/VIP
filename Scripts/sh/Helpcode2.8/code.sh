@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Build 20211202-001-test
+## Build 20211205-001-test-fix
 
 ## 导入通用变量与函数
 dir_shell=/ql/shell
@@ -16,7 +16,7 @@ repo4='shufflewzc_faker2'                #预设的 shufflewzc 仓库
 repo5='Wenmoux_scripts_wen_chinnkarahoi' #预设的 Wenmoux 仓库，用于读取口袋书店互助码。需提前拉取温某人的仓库或口袋书店脚本并完整运行。
 repo6='Aaron-lv_sync_jd_scripts'         #预设的 Aaron-lv 仓库
 repo7='smiek2221_scripts'                #预设的 smiek2221 仓库
-repo=$repo4                              #默认调用 shufflewzc_faker2 仓库脚本日志
+repo=""                                  #空值，表示遍历所有仓库脚本日志
 
 ## 调试模式开关，默认是0，表示关闭；设置为1，表示开启
 DEBUG="1"
@@ -38,9 +38,9 @@ CLEANBAK_DAYS="2"
 ## 填 2 使用“随机顺序互助模板”，本套脚本内账号间随机顺序助力，每次生成的顺序都不一致。
 ## 填 3 使用“车头A模式互助模板”，本套脚本内指定前 N 个账号优先助力，N 个以后账号间随机助力(随机部分账号顺序随机)。
 ## 填 4 使用“车头B模式互助模板”，本套脚本内指定前 N 个账号优先助力，N 个以后账号间随机助力(随机部分账号顺序固定)。
-HelpType="4"
+HelpType=""
 
-## 定义前 N 个账号优先助力，N 个以后账号间随机助力。front_num="N"，N 定义值小于账号总数，
+## 定义前 N 个账号优先助力，N 个以后账号间随机助力。front_num="N"，N 定义值小于账号总数，当HelpType 赋值 3 或 4 时有效
 front_num="5"
 
 ## 定义指定活动采用指定的互助模板。
@@ -143,7 +143,7 @@ name_js=(
     "$repo"_jd_health
     "$repo"_jd_carnivalcity
     "$repo"_jd_city
-    "$repo4"_jd_moneyTree_heip
+    "$repo"_jd_moneyTree_heip
     "$repo"_jd_cfd
 )
 
@@ -194,7 +194,7 @@ gen_pt_pin_array() {
     local tmp1 tmp2 i pt_pin_temp
     for i in "${!array[@]}"; do
         pt_pin_temp=$(echo ${array[i]} | perl -pe "{s|.*pt_pin=([^; ]+)(?=;?).*|\1|; s|%|\\\x|g}")
-        remark_name[i]=$(cat $dir_db/env.db | grep ${array[i]} | perl -pe "{s|.*remarks\":\"([^\"]+).*|\1|g}" | tail -1)
+        remark_name[i]=$(cat $dir_db/env.db | grep ${array[i]} | grep remarks | perl -pe "{s|.*remarks\":\"([^\"]+).*|\1|g}" | tail -1)
         [[ $pt_pin_temp == *\\x* ]] && pt_pin[i]=$(printf $pt_pin_temp) || pt_pin[i]=$pt_pin_temp
     done
 }
@@ -214,12 +214,12 @@ export_codes_sub() {
     local envs=$(eval echo "\$JD_COOKIE")
     local array=($(echo $envs | sed 's/&/ /g'))
     local user_sum=${#array[*]}
-    if cd $dir_log/$task_name &>/dev/null && [[ $(ls) ]]; then
+    if cd $dir_log &>/dev/null && [[ $(ls ./*$task_name*/*.log 2>/dev/null | wc -l) -gt 0 ]]; then
         ## 寻找所有互助码以及对应的pt_pin
         i=0
         pt_pin_in_log=()
         code=()
-        pt_pin_and_code=$(ls -r *.log | xargs awk -v var="的$chinese_name好友互助码" 'BEGIN{FS="[（ ）】]+"; OFS="&"} $3~var {print $2,$4}')
+        pt_pin_and_code=$(ls -t ./*$task_name*/*.log | xargs awk -v var="的$chinese_name好友互助码" 'BEGIN{FS="[（ ）】]+"; OFS="&"} $3~var {print $2,$4}')
         for line in $pt_pin_and_code; do
             pt_pin_in_log[i]=$(echo $line | awk -F "&" '{print $1}')
             code[i]=$(echo $line | awk -F "&" '{print $2}')
@@ -408,7 +408,7 @@ export_codes_sub() {
             esac
         fi
     else
-        echo "#【$(date +%X)】 未运行过 $task_name.js 脚本，未产生日志"
+        echo "#【$(date +%X)】 未运行过 $chinese_name 的脚本，未产生日志"
     fi
 }
 
@@ -449,12 +449,9 @@ export_all_codes() {
     if [ "$ps_num" -gt $proc_num ]; then
         echo -e "\n#【$(date +%X)】 检测到 code.sh 的线程过多 ，请稍后再试！"
         exit
-    elif [ -z $repo ]; then
-        echo -e "\n#【$(date +%X)】 未检测到兼容的活动脚本日志，无法读取互助码，退出！"
-        exit
     else
-        echo -e "\n#【$(date +%X)】 默认调用 $repo 的脚本日志，格式化导出互助码，生成互助规则！"
-        dump_user_info
+        [[ $repo ]] && echo -e "\n#【$(date +%X)】 默认查询 $repo 的活动脚本日志，格式化导出互助码，生成互助规则！" || echo -e "\n#【$(date +%X)】 遍历活动脚本日志，格式化导出互助码，生成互助规则！"
+        # dump_user_info
         for ((i = 0; i < ${#name_js[*]}; i++)); do
             echo -e "\n## ${name_chinese[i]}："
             export_codes_sub "${name_js[i]}" "${name_config[i]}" "${name_chinese[i]}"
@@ -552,12 +549,12 @@ export_codes_sub_only() {
     local envs=$(eval echo "\$JD_COOKIE")
     local array=($(echo $envs | sed 's/&/ /g'))
     local user_sum=${#array[*]}
-    if cd $dir_log/$task_name &>/dev/null && [[ $(ls) ]]; then
+    if cd $dir_log &>/dev/null && [[ $(ls ./*$task_name*/*.log 2>/dev/null | wc -l) -gt 0 ]]; then
         ## 寻找所有互助码以及对应的pt_pin
         i=0
         pt_pin_in_log=()
         code=()
-        pt_pin_and_code=$(ls -r *.log | xargs awk -v var="的$chinese_name好友互助码" 'BEGIN{FS="[（ ）】]+"; OFS="&"} $3~var {print $2,$4}')
+        pt_pin_and_code=$(ls -t ./*$task_name*/*.log | xargs awk -v var="的$chinese_name好友互助码" 'BEGIN{FS="[（ ）】]+"; OFS="&"} $3~var {print $2,$4}' | xargs awk -v var="的$chinese_name好友互助码" 'BEGIN{FS="[（ ）】]+"; OFS="&"} $3~var {print $2,$4}')
         for line in $pt_pin_and_code; do
             pt_pin_in_log[i]=$(echo $line | awk -F "&" '{print $1}')
             code[i]=$(echo $line | awk -F "&" '{print $2}')
@@ -580,6 +577,8 @@ export_codes_sub_only() {
         else
             echo "## 从日志中未找到任何互助码"
         fi
+    else
+        echo "#【$(date +%X)】 未运行过 $chinese_name 的脚本，未产生日志"
     fi
 }
 
@@ -743,7 +742,7 @@ kill_proc() {
     ps -ef | grep "$1" | grep -Ev "$2" | awk '{print $1}' | xargs kill -9
 }
 
-install_deps_scripts() {
+batch_deps_scripts() {
     GithubProxyUrl="https://ghproxy.com/"
 
     switch_status=(
@@ -765,25 +764,25 @@ install_deps_scripts() {
     )
 
     test_connect() {
-        curl -I -m 2 -s -w "%{http_code}\n" -o /dev/null $1
+        curl -I -s --connect-timeout 5 --retry 3 --noproxy "*" $1 -w %{http_code} | tail -n1
     }
 
     download_scripts() {
         tmp_scripts_url=$1
         [[ "$(test_connect $tmp_scripts_url)" -ne "200" ]] && tmp_scripts_url="$GithubProxyUrl$tmp_scripts_url"
-        curl -L -m 10 -s $tmp_scripts_url -o $dir_config/$2
+        curl -s --connect-timeout 5 --retry 3 --noproxy "*" $tmp_scripts_url -o $dir_config/$2
     }
 
     for ((i = 0; i < ${#scripts_url[*]}; i++)); do
         [[ ${switch_status[i]} = "on" ]] && download_scripts ${scripts_url[i]} ${scripts_name[i]}
-        [[ -d $dir_dep && -f $dir_config/${scripts_name[i]} ]] && cp -rf $dir_config/${scripts_name[i]} $dir_dep
-        [[ -f $dir_config/${scripts_name[i]} ]] && find $dir_scripts ! \( -path "*JDHelloWorld*" -o -path "*ccwav*" \) -type f -name ${scripts_name[i]} | xargs -n 1 cp -rf $dir_config/${scripts_name[i]} && cp -rf $dir_config/${scripts_name[i]} $dir_scripts
+        #        [[ -d $dir_dep && -f $dir_config/${scripts_name[i]} ]] && cp -rf $dir_config/${scripts_name[i]} $dir_dep
+        #        [[ -f $dir_config/${scripts_name[i]} ]] && find $dir_scripts ! \( -path "*JDHelloWorld*" -o -path "*ccwav*" \) -type f -name ${scripts_name[i]}|xargs -n 1 cp -rf $dir_config/${scripts_name[i]} && cp -rf $dir_config/${scripts_name[i]} $dir_scripts
     done
 }
 
 ## 执行并写入日志
 kill_proc "code.sh" "grep|$$" >/dev/null 2>&1
-#install_deps_scripts &
+batch_deps_scripts &
 [[ $FixDependType = "1" ]] && [[ "$ps_num" -le $proc_num ]] && install_dependencies_all >/dev/null 2>&1 &
 latest_log=$(ls -r $dir_code | head -1)
 latest_log_path="$dir_code/$latest_log"
@@ -794,10 +793,5 @@ update_help
 
 ## 修改curtinlv入会领豆配置文件的参数
 [[ -f /ql/repo/curtinlv_JD-Script/OpenCard/OpenCardConfig.ini ]] && sed -i "4c JD_COOKIE = '$(echo $JD_COOKIE | sed "s/&/ /g; s/\S*\(pt_key=\S\+;\)\S*\(pt_pin=\S\+;\)\S*/\1\2/g;" | perl -pe "s| |&|g")'" /ql/repo/curtinlv_JD-Script/OpenCard/OpenCardConfig.ini
-
-## 魔改版 jdCookie.js 复制到 /ql/deps/。仅支持v2.10.8及以上版本的青龙
-[[ -d $dir_dep && -f $dir_config/jdCookie.js ]] && cp -rf $dir_config/jdCookie.js $dir_dep
-## 魔改版 jdCookie.js 覆盖到 /ql/scripts/及子路径下的所有 jdCookie.js。支持v2.10.8 以下版本的青龙
-[[ -f $dir_config/jdCookie.js ]] && find $dir_scripts ! \( -path "*JDHelloWorld*" -o -path "*ccwav*" \) -type f -name jdCookie.js | xargs -n 1 cp -rf $dir_config/jdCookie.js && cp -rf $dir_config/jdCookie.js $dir_scripts
 
 exit
