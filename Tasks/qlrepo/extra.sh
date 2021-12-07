@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-## Mod: Build2021201V1
+## Mod: Build2021207V1
 ## 添加你需要重启自动执行的任意命令，比如 ql repo
 ## 安装node依赖使用 pnpm install -g xxx xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
 ## 安装python依赖使用 pip3 install xxx（Build2021125V1 及以上版本的 extra.sh，可忽略）
@@ -307,8 +307,8 @@ install_pl_mods() {
     install_py_reqs
     install_js_pkgs_all
     install_pl_mods
-} &
-[[ $dependencies == *al* ]] && install_alpine_pkgs &
-[[ $dependencies == *py* ]] && install_py_reqs &
-[[ $dependencies == *js* ]] && install_js_pkgs_all &
-[[ $dependencies == *pl* ]] && install_pl_mods &
+}
+[[ $dependencies == *al* ]] && install_alpine_pkgs
+[[ $dependencies == *py* ]] && install_py_reqs
+[[ $dependencies == *js* ]] && install_js_pkgs_all
+[[ $dependencies == *pl* ]] && install_pl_mods
