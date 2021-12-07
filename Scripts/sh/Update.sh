@@ -47,7 +47,7 @@ package_name='package_name="@types/node axios canvas crypto-js date-fns dotenv d
 front_num='front_num="1"'
 
 update_config() {
-    curl -sL https://ghproxy.com/https://raw.githubusercontent.com/Oreomeow/VIP/main/Conf/Qinglong/config.sample.sh >"$file_raw_config"
+    curl -sL https://cdn.jsdelivr.net/gh/Oreomeow/VIP@main/Conf/Qinglong/config.sample.sh >"$file_raw_config"
     mv -b "$file_raw_config" "$dir_config"
     sed -ri "s/GithubProxyUrl=\"https\:\/\/ghproxy.com\/\"/GithubProxyUrl=\"${GithubProxyUrl}\"/" "$file_config_config"
     sed -i "s/TG_BOT_TOKEN=\"\"/TG_BOT_TOKEN=\"${TG_BOT_TOKEN}\"/" "$file_config_config"
@@ -59,20 +59,21 @@ update_config() {
     sed -i "s/Recombin_CK_ARG1=\"\"/Recombin_CK_ARG1=\"${Recombin_CK_ARG1}\"/" "$file_config_config"
     sed -i "s/Recombin_CK_ARG2=\"\"/Recombin_CK_ARG2=\"${Recombin_CK_ARG2}\"/" "$file_config_config"
     sed -i "s/Remove_Void_CK=\"\"/Remove_Void_CK=\"${Remove_Void_CK}\"/" "$file_config_config"
-    sed -i "/^js_deps_replace_envs=/c${js_deps_replace_env}" "$file_config_config"
+    sed -i "/^js_deps_replace_envs=/c${js_deps_replace_envs}" "$file_config_config"
 }
 
 update_extra() {
-    curl -sL https://ghproxy.com/https://raw.githubusercontent.com/Oreomeow/VIP/main/Tasks/qlrepo/extra.sh >"$file_raw_extra"
+    curl -sL https://cdn.jsdelivr.net/gh/Oreomeow/VIP@main/Tasks/qlrepo/extra.sh >"$file_raw_extra"
     mv -b "$file_raw_extra" "$dir_config"
     sed -i "s/CollectedRepo=(4)/CollectedRepo=(${CollectedRepo})/" "$file_config_extra"
     sed -i "s/OtherRepo=()/OtherRepo=(${OtherRepo})/" "$file_config_extra"
+    sed -i "s/RawScript=(1 2)/RawScript=(${RawScript})/" "$file_config_extra"
     sed -i "s/Ninja=\"on\"/Ninja=\"${Ninja}\"/" "$file_config_extra"
     echo 'bash /ql/config/Update.sh' >>"$file_config_extra"
 }
 
 update_code() {
-    curl -sL https://ghproxy.com/https://raw.githubusercontent.com/Oreomeow/VIP/main/Scripts/sh/Helpcode2.8/code.sh >"$file_raw_code"
+    curl -sL https://cdn.jsdelivr.net/gh/Oreomeow/VIP@main/Scripts/sh/Helpcode2.8/code.sh >"$file_raw_code"
     mv -b "$file_raw_code" "$dir_config"
     sed -i "s/repo=\$repo4/repo=\$repo${repoNum}/" "$file_config_code"
     sed -i "/^HelpType=/c${HelpType}" "$file_config_code"
@@ -84,7 +85,7 @@ update_code() {
 }
 
 update_task_before() {
-    curl -sL https://ghproxy.com/https://raw.githubusercontent.com/Oreomeow/VIP/main/Scripts/sh/Helpcode2.8/task_before.sh >"$file_raw_task_before"
+    curl -sL https://cdn.jsdelivr.net/gh/Oreomeow/VIP@main/Scripts/sh/Helpcode2.8/task_before.sh >"$file_raw_task_before"
     mv -b "$file_raw_task_before" "$dir_config"
     sed -i "s/jd_moneyTree_heip/jd_moneyTree*/" "$file_config_task_before"
 }
