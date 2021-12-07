@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Build 20211205-001-test-fix
+## Build 20211207-002-test
 
 ## 导入通用变量与函数
 dir_shell=/ql/shell
@@ -672,70 +672,92 @@ backup_del() {
     fi
 }
 
-install_dependencies_normal() {
-    for i in $@; do
-        case $i in
-        canvas)
-            cd /ql/scripts
-            if [[ "$(echo $(npm ls $i) | grep ERR)" != "" ]]; then
-                npm uninstall $i
-            fi
-            if [[ "$(npm ls $i)" =~ (empty) ]]; then
-                apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev && npm i $i --prefix /ql/scripts --build-from-source
-            fi
-            ;;
-        *)
-            if [[ "$(npm ls $i)" =~ $i ]]; then
-                npm uninstall $i
-            elif [[ "$(echo $(npm ls $i -g) | grep ERR)" != "" ]]; then
-                npm uninstall $i -g
-            fi
-            if [[ "$(npm ls $i -g)" =~ (empty) ]]; then
-                [[ $i = "typescript" ]] && npm i $i -g --force || npm i $i -g
-            fi
-            ;;
-        esac
-    done
-}
+#检查 node 依赖状态并修复
+install_node_dependencies_all() {
+    node_dependencies_ori_status() {
+        if [[ -n $(echo $(cnpm ls $1) | grep ERR) ]]; then
+            return 1
+        elif [[ -n $(echo $(cnpm ls $1 -g) | grep ERR) ]]; then
+            return 2
+        elif [[ $(cnpm ls $1) =~ $1 ]]; then
+            return 3
+        elif [[ $(cnpm ls $1 -g) =~ $1 ]]; then
+            return 4
+        fi
+    }
 
-install_dependencies_force() {
-    for i in $@; do
-        case $i in
-        canvas)
-            cd /ql/scripts
-            if [[ "$(npm ls $i)" =~ $i && "$(echo $(npm ls $i) | grep ERR)" != "" ]]; then
-                npm uninstall $i
-                rm -rf /ql/scripts/node_modules/$i
-                rm -rf /usr/local/lib/node_modules/lodash/*
-            fi
-            if [[ "$(npm ls $i)" =~ (empty) ]]; then
-                apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev && npm i $i --prefix /ql/scripts --build-from-source --force
-            fi
-            ;;
-        *)
-            cd /ql/scripts
-            if [[ "$(npm ls $i)" =~ $i ]]; then
-                npm uninstall $i
-                rm -rf /ql/scripts/node_modules/$i
-                rm -rf /usr/local/lib/node_modules/lodash/*
-            elif [[ "$(npm ls $i -g)" =~ $i && "$(echo $(npm ls $i -g) | grep ERR)" != "" ]]; then
-                npm uninstall $i -g
-                rm -rf /ql/scripts/node_modules/$i
-                rm -rf /usr/local/lib/node_modules/lodash/*
-            fi
-            if [[ "$(npm ls $i -g)" =~ (empty) ]]; then
-                npm i $i -g --force
-            fi
-            ;;
-        esac
-    done
-}
+    test() {
+        for i in $@; do
+            node_dependencies_ori_status
+            echo -e "$i : $?"
+        done
+    }
 
-install_dependencies_all() {
-    install_dependencies_normal $package_name
+    install_node_dependencie() {
+        #        node_dependencies_ori_status $1
+        #        if [[ $? = 1 || $? = 2 ]]; then
+        #            cnpm uninstall $1
+        #        elif [[ $? = 3 ]]; then
+        #            cnpm uninstall $1 -g
+        #        fi
+        #
+        #        node_dependencies_ori_status $1
+        #        if [[ $? = 4 ]]; then
+        #            if [[ $1 = "canvas" ]]; then
+        #                apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev && cnpm install $1 -g
+        #            else
+        #                cnpm install $1 -g --force
+        #            fi
+        #        fi
+
+        node_dependencies_ori_status $1
+        if [[ $? = 1 ]]; then
+            [[ $1 = "canvas" ]] && {
+                cnpm uninstall $1
+                rm -rf /ql/scripts/node_modules/canvas
+                rm -rf /usr/local/lib/node_modules/lodash/canvas
+            } || cnpm uninstall $1
+        elif [ $? = 2 ]; then
+            [[ $1 = "canvas" ]] && {
+                cnpm uninstall $1 -g
+                rm -rf /usr/local/lib/node_modules/canvas
+            } || cnpm uninstall $1 -g
+        fi
+
+        node_dependencies_ori_status $1
+        if [[ $? != 3 && $? != 4 ]]; then
+            [[ $1 = "canvas" ]] && {
+                apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev
+                cnpm install $1 -g --force
+            } || cnpm install $1 -g --force
+        fi
+    }
+
+    uninstall_dependencies() {
+        for i in $package_name; do
+            cnpm uninstall $i
+            cnpm uninstall i $i
+            cnpm uninstall $i -g
+            cnpm uninstall i $i -g
+        done
+    }
+
+    check_node_dependencies_setup_status() {
+        for i in $package_name; do
+            cnpm ls $i -g
+        done
+    }
+
+    #cnpm install -g cnpm
+    [[ $(npm ls cnpm -g) =~ (empty) ]] && npm install cnpm -g
     for i in $package_name; do
-        {install_dependencies_force $i} &
+        install_node_dependencie $i
     done
+    #cnpm update --force
+    #cnpm i --legacy-peer-deps
+    #cnpm i --package-lock-only
+    #cnpm audit fix
+    #cnpm audit fix --force
 }
 
 kill_proc() {
@@ -743,7 +765,8 @@ kill_proc() {
 }
 
 batch_deps_scripts() {
-    GithubProxyUrl="https://ghproxy.com/"
+    GithubNoProxyUrl="https://raw.githubusercontent.com/"
+    GithubProxyUrl="https://cdn.jsdelivr.net/gh/"
 
     switch_status=(
         on
@@ -757,33 +780,29 @@ batch_deps_scripts() {
         JD_DailyBonus.js
     )
 
-    scripts_url=(
-        https://raw.githubusercontent.com/ccwav/QLScript2/main/ql.js
-        https://raw.githubusercontent.com/ccwav/QLScript2/main/sendNotify.js
-        https://raw.githubusercontent.com/NobyDa/Script/master/JD-DailyBonus/JD_DailyBonus.js
+    scripts_source=(
+        https://cdn.jsdelivr.net/gh/ccwav/QLScript2@main/ql.js
+        https://cdn.jsdelivr.net/gh/ccwav/QLScript2@main/sendNotify.js
+        https://cdn.jsdelivr.net/gh/NobyDa/Script@master/JD-DailyBonus/JD_DailyBonus.js
     )
 
     test_connect() {
-        curl -I -s --connect-timeout 5 --retry 3 --noproxy "*" $1 -w %{http_code} | tail -n1
+        curl -o /dev/null -s -w %{http_code} $1
     }
 
     download_scripts() {
-        tmp_scripts_url=$1
-        [[ "$(test_connect $tmp_scripts_url)" -ne "200" ]] && tmp_scripts_url="$GithubProxyUrl$tmp_scripts_url"
-        curl -s --connect-timeout 5 --retry 3 --noproxy "*" $tmp_scripts_url -o $dir_config/$2
+        [[ "$(test_connect $1)" -eq "200" ]] && curl -C - -s --connect-timeout 5 --retry 3 --noproxy "*" $1 -o $dir_config/$2
     }
 
-    for ((i = 0; i < ${#scripts_url[*]}; i++)); do
-        [[ ${switch_status[i]} = "on" ]] && download_scripts ${scripts_url[i]} ${scripts_name[i]}
-        #        [[ -d $dir_dep && -f $dir_config/${scripts_name[i]} ]] && cp -rf $dir_config/${scripts_name[i]} $dir_dep
-        #        [[ -f $dir_config/${scripts_name[i]} ]] && find $dir_scripts ! \( -path "*JDHelloWorld*" -o -path "*ccwav*" \) -type f -name ${scripts_name[i]}|xargs -n 1 cp -rf $dir_config/${scripts_name[i]} && cp -rf $dir_config/${scripts_name[i]} $dir_scripts
+    for ((i = 0; i < ${#scripts_source[*]}; i++)); do
+        { if [[ ${switch_status[i]} = "on" ]]; then download_scripts ${scripts_source[i]} ${scripts_name[i]}; fi; } &
     done
 }
 
 ## 执行并写入日志
 kill_proc "code.sh" "grep|$$" >/dev/null 2>&1
 batch_deps_scripts &
-[[ $FixDependType = "1" ]] && [[ "$ps_num" -le $proc_num ]] && install_dependencies_all >/dev/null 2>&1 &
+[[ $FixDependType = "1" ]] && [[ "$ps_num" -le $proc_num ]] && install_node_dependencies_all >/dev/null 2>&1 &
 latest_log=$(ls -r $dir_code | head -1)
 latest_log_path="$dir_code/$latest_log"
 ps_num="$(ps | grep code.sh | grep -v grep | wc -l)"

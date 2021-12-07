@@ -34,59 +34,12 @@ Build 20211122-001
 2、添加 风之凌殇 大佬 魔改版 jdCookie.js 自动复制到 /ql/deps/路径的脚本。需提前将 魔改版 jdCookie.js 拷贝到 /ql/config/ 路径。
 
 [ 信物 : task_before.sh ]
-Build 20211128-002
-1、新增 重组CK 前是否检测并剔除无效 CK 的相关代码。须搭配 config_sample.sh Build 20211128-002 及以上版本使用。
+Build 20211204-002-fix3
 
-Build 20211128-001
-1、修复 轮换模式下 参与轮换账号 数量为 0 的死循环逻辑；
-2、添加 参与轮换账号不足 2 个时 切换回正常 Cookie 模式的逻辑代码。
-
-Build 20211127-002
-1、新增 分段 Cookie 模式。详见 新版 config_sample.sh 环境变量说明。须搭配 config_sample.sh Build 20211127-002 及以上版本使用。
-
-Build 20211127-001-fix
-1、修复 轮换模式 自定义轮换数值较大时的一处计算错误。
-
-Build 20211127-001
-1、整合 随机、优先、轮换和组队模式为 重组 Cookie；优化全局模式与局部变量的填写方式。
-
-Build 20211126-002
-1、新增 轮换 Cookie 模式。详见 新版 config_sample.sh 环境变量说明。须搭配 config_sample.sh Build 20211126-001 及以上版本使用。
-
-Build 20211126-001
-1、修复 随机CK 和 优先CK 模式中多脚本间参数相互干涉的 BUG。
-
-Build 20211125-002
-1、更新 随机CK 和 优先CK 的代码，简化这两种模式的环境变量填写(填写说明详见config_sample.sh)。
-
-
-Build 20211125-001
-1、新增 优先 Cookie 模式，即指定前 N 个Cookie 按顺序参加活动，第 N 个以后 Cookie 按随机顺序参加活动。
-
-Build 20211124-001
-1、配合二次修改魔改版 jdCookie.js 一些代码更新；
-
-Build 20211122-001
-1、集成 风之凌殇 大佬 利用 Nodejs 解决 Argument list too long 的相关代码。须配合魔改版 jdCookie.js 使用；
+配合魔改版jdCookie.js(放置在/ql/config)使用，
 
 [ 信物 : config_sample.sh ]
-Build 20211128-002
-1、新增 重组CK 前是否检测并剔除无效 CK 的环境变量。须搭配 task_before.sh Build 20211128-002 及以上版本使用。
-
-Build 20211127-002
-1、新增 分段 Cookie 模式。详见 新版 环境变量说明。须搭配 task_before.sh Build 20211127-002 及以上版本使用。
-
-Build 20211127-001
-1、整合 随机、优先、轮换和组队模式为 重组 Cookie；优化全局模式与局部变量的填写方式。
-
-Build 20211126-001
-1、新增 轮换 Cookie 模式。详见 新版 环境变量说明。须搭配 task_before.sh Build 20211126-002 及以上版本使用。
-
-Build 20211125-002
-1、简化 随机CK 和 优先CK 这两种模式的环境变量填写(填写说明详见内页)。
-
-Build 20211125-001
-1、新增优先 Cookie 模式相关环境变量。
+Build 20211204-002
 
 [ 信物 : jdCookie.js ]
 特别鸣谢：风之凌殇 大佬。其用 Nodejs 变量转换方法，解决了 Shell 环境变量参数长度过短的问题，从源头上解决了 Argument list too long 的问题。该项目地址：
@@ -98,4 +51,4 @@ https://gist.github.com/fzls/14f8d1d3ebb2fef64750ad91d268e4f6
 2021.11.23 更新
 1、同步最新。增加了“如果当前活动并没有互助内容，请无视上面这句话”的提示；
 
-风之凌殇 魔改版 jdCookie.js 。提前将 魔改版 jdCookie.js 拷贝到 /ql/config/ 路径，新版 code.sh 可自动将其拷贝至 /ql/deps/ 路径并且强制覆盖到 /ql/scripts/ 路径和子目录下所有的 jdCookie.js
+风之凌殇 魔改版 jdCookie.js 。提前将 魔改版 jdCookie.js 拷贝到 /ql/config/ 路径，新版 task_before.sh 可自动将其自动强制覆盖到 /ql/scripts/ 路径和子目录下所有的 jdCookie.js

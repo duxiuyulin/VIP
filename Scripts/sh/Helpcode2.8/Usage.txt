@@ -17,7 +17,7 @@ task_before.sh 是本人基于青龙原版修改而来，支持包括东东农�
 主要原理：
 a) code.sh 工作主要分两个阶段：
 1、第一阶段：从各个活动脚本日志中搜索互助码，跟 COOKIES 的 pt_pin (用户名)校验后整理输出。根据你选择的互助规则模板，生成对应的互助规则。最新整理的互助码和互助规则输出到 code.sh 的日志，日志路径在 /ql/log/code/；
-2、第二阶段：读取 code.sh 的日志和 /ql/log/.bak_ShareCode/ 路径下的各个活动的互助码和互助规则日志文件。逐条校对互助码和互助规则内容，如果不一致，则自动改写更新日志文件。当 code.sh 日志中互助码为 undefined 或 {} 时，跳过更新改写互助码和互助规则日志文件内容。
+2、第二阶段：读取 code.sh 的日志和 /ql/log/.ShareCode/ 路径下的各个活动的互助码和互助规则日志文件。逐条校对互助码和互助规则内容，如果不一致，则自动改写更新日志文件。当 code.sh 日志中互助码为 undefined 或 {} 时，跳过更新改写互助码和互助规则日志文件内容。
 
 b) 有些情况下活动脚本输出的互助码不全，例如：你有 10 个账号，目前活动脚本只跑了一半，日志只输出了 5 个，那么 code.sh 整理的也就只有 5 个有互助码，5 个空值。那么互助码和互助规则日志文件的对应内容也会相应更新。
 
@@ -63,31 +63,12 @@ c）问题：
 proc_num="7" 改成 proc_num="9"
 然后 code.sh 就可以运行了，但不建议这么做，因为这是一个防呆设计。
 
-四、组队算法简介
-根据活动特性，将 COOKIE 格式化后以按照指定组队方式运行活动脚本。5人组队算法示例：
-
-1 2 ... 5
-1 6 ... 9
-1 10 ... 13
-2 1 14 ... 16
-2 17 ... 20
-2 21 ... 24
-
-遇到CK超过用户总数则自动终止。如果只有 18 个 COOKIE
-则
-1 2 ... 5
-1 6 ... 9
-1 10 ... 13
-2 1 14 ... 16
-2 17 18
-以实现编号靠前的 COOKIE 利益最大化
-
-五、code.sh 安装依赖包后的检测方法：
+四、code.sh 安装依赖包后的检测方法：
 ① 进入青龙控制台
 docker exec -it qinglong bash
 注：qinglong 为容器名称
 ② 执行检查依赖的可靠性代码，将下文代码部分整体复制粘贴到控制台并回车：
-package_name="canvas png-js date-fns axios crypto-js ts-md5 tslib @types/node dotenv typescript fs require tslib"
+package_name="canvas png-js date-fns axios crypto-js ts-md5 tslib @types/node dotenv got md5 requests typescript fs require tslib jsdom download js-base64 tough-cookie tunnel ws qrcode-terminal"
 
 for i in $package_name; do
     case $i in
