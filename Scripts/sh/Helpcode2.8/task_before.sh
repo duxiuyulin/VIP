@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Build 20211207-002-test
+# Build 20211208-001-test
 
 name_js=(
     jd_fruit
@@ -18,7 +18,7 @@ name_js=(
     jd_health
     jd_carnivalcity
     jd_city
-    jd_moneyTree_heip
+    jd_moneyTree
     jd_cfdtx
 )
 name_config=(
@@ -322,7 +322,7 @@ Recombin_CK_cal() {
         # 当月总天数
         local total_days=$(cal | grep ^[0-9] | tail -1 | awk -F " " '{print $NF}')
         # 今天几号
-        local today_day=$(date +%d)
+        local today_day=$(date +%-d)
         local combined_all rot_num rot_start_num jdCookie_priority jdCookie_rot_head jdCookie_rot_mid tmp_1 tmp_2 tmp_3 a b c
         # 固定区账号数量
         [[ -n "$(echo $1 | sed -n "/^[0-9]\+$/p")" ]] && fixed_num="$1" || fixed_num="0"
@@ -650,14 +650,13 @@ combine_only() {
 ## 提前替换js基础依赖
 JS_Deps_Replace() {
     if [ $js_deps_replace_envs ]; then
-        local dir_list=($(ls -l $dir_scripts | awk '/^d/ {print $NF}'))
         local js_deps_replace_array=($(echo $js_deps_replace_envs | perl -pe "{s|&| |g}"))
         for i in "${js_deps_replace_array[@]}"; do
             local tmp_task_array=($(echo $i | perl -pe "{s|@| |g}"))
             local tmp_script_array=($(echo ${tmp_task_array[0]} | perl -pe "{s/\|/ /g}"))
             local tmp_skip_repo=($(echo ${tmp_task_array[1]} | perl -pe "{s/\|/ /g}"))
             for j in "${tmp_script_array[@]}"; do
-                [[ ! ${tmp_skip_repo[@]} =~ $repo_dir ]] && [[ -f $dir_config/$j.js ]] && cp -rvf $dir_config/$j.js $local_scr_dir
+                [[ ! ${tmp_skip_repo[@]} =~ $repo_dir ]] && [[ -f $dir_config/$j.js ]] && cp -rvf $dir_config/$j.js $local_scr_dir/$j.js
             done
         done
     fi
