@@ -6,7 +6,7 @@ pip3 install telethon pysocks httpx
 import os
 import time
 
-from telethon import TelegramClient
+from telethon import TelegramClient, events, sync
 
 api_id_list = [
     "xxxxxxx",
