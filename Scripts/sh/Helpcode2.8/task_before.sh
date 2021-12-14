@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Build 20211208-003-test
+## Build 20211214-002-test
 
 name_js=(
     jd_fruit
@@ -286,7 +286,7 @@ Recombin_CK_cal() {
     combine_random() {
         local combined_all ran_sub tmp i
         echo "# 正在应用 随机Cookie 模式..."
-        [[ -n "$(echo $1 | sed -n "/^[0-9]\+$/p")" ]] && ran_num=$1 || ran_num=$user_sum
+        [[ -n "$(echo $1 | sed -n "/^[0-9]\+$/p")" && $1 -le $user_sum ]] && ran_num=$1 || ran_num=$user_sum
         echo -e "# 当前总共 $user_sum 个有效账号，本次随机抽取 $ran_num 个账号按随机顺序参加活动。"
         ran_sub="$(seq $user_sum | sort -R | head -$ran_num)"
         for i in $ran_sub; do
@@ -351,10 +351,10 @@ Recombin_CK_cal() {
             local rot_total_num=$((user_sum - $fixed_num))
             if [[ $rot_total_num -gt 2 ]]; then
                 # 轮换区的账号数量
-                rot_num=$Recombin_CK_ARG2
+                rot_num=$2
                 [[ -z "$(echo $rot_num | sed -n "/^[0-9]\+$/p")" || ! $rot_num || $rot_num -lt 1 || $rot_total_num -lt $rot_num ]] && rot_num=$(((rot_total_num + total_days - 1) / total_days)) && [[ $rot_num -lt 1 ]] && rot_num="1"
                 rot_start_num=$((fixed_num + rot_num * ((today_day - 1))))
-                while [[ $user_sum -lt $rot_start_num ]]; do rot_start_num=$((rot_start_num - rot_total_num)); done
+                while [[ $user_sum -lt $((rot_start_num + 1)) ]]; do rot_start_num=$((rot_start_num - rot_total_num)); done
                 echo -n "# 当前总共 $user_sum 个有效账号"
                 [[ $fixed_num -gt 0 ]] && echo -e "，其中前 $fixed_num 个账号为固定顺序。" || echo -e "，所有账号参与轮换。"
                 echo -e "# 今天从第 $((rot_start_num + 1)) 个账号开始轮换，轮换频次为：$rot_num 个账号/天。"
@@ -386,39 +386,39 @@ Recombin_CK_cal() {
 
     ## 组队模式算法
     combine_team() {
-        run_js_in_team() {
-            local jdCookie_team_part1 jdCookie_team_part2 i j k m n
-            for ((i = 0; i < $user_sum; i++)); do
+        team_ck() {
+            local tmp combined_tmp combined_all i j k m n
+            for ((i = 0; i < $team_num_total; i++)); do
+                #当前队伍是第几组
                 j=$((i + 1))
-                m=$((i / team_num))
-                n=$(((teamer_num - 1) * i + 1))
-                jdCookie_team_part1="${array[m]}"
-                jdCookie_team_part2=""
-                if [[ $j -le $team_num ]]; then
-                    for ((k = 1; k < $teamer_num; k++)); do
-                        jdCookie_team_part2="$jdCookie_team_part2&${array[n]}"
-                        let n++
+                #发起组队的账号在Cookie数组中的序号
+                k=$((i / team_num))
+                tmp=""
+                combined_tmp=""
+                combined_all=""
+                if [ $i -ne $team_num ]; then
+                    for ((m = 1; m < $teamer_num; m++)); do
+                        #当前组队的第二账号所在Cookie数组的序号
+                        n=$(((teamer_num - 1) * i + m)) && [[ $n -ge $user_sum ]] && continue
+                        tmp="${array[n]}"
+                        combined_tmp="$combined_tmp&$tmp"
                     done
-                elif [[ $j -eq $((team_num + 1)) ]]; then
-                    for ((k = 1; k < $((teamer_num - 1)); k++)); do
-                        jdCookie_team_part1="${array[m]}&${array[0]}"
-                        jdCookie_team_part2="$jdCookie_team_part2&${array[n]}"
-                        let n++
+                    combined_all="${array[k]}$combined_tmp"
+                elif [ $i -eq $team_num ]; then
+                    for ((m = 1; m < $((teamer_num - 1)); m++)); do
+                        #第二账号发起的第一支组队，该队伍中的第三账号所在Cookie数组的序号
+                        n=$(((teamer_num - 1) * i + m)) && [[ $n -ge $user_sum ]] && continue
+                        tmp="${array[n]}"
+                        combined_tmp="$combined_tmp&$tmp"
                     done
-                elif [[ $j -gt $((team_num + 1)) ]]; then
-                    [[ $((n + 1)) -le $user_sum ]] && n=$(((teamer_num - 1) * i)) || break
-                    for ((k = $i; k < $((i + teamer_num - 1)); k++)); do
-                        jdCookie_team_part2="$jdCookie_team_part2&${array[n]}"
-                        let n++
-                        [[ $n = $m ]] && n=$((n + 1))
-                        [[ $((n + 1)) -gt $user_sum ]] && break
-                    done
+                    combined_all="${array[k]}&${array[0]}$combined_tmp"
                 fi
-                jdCookie_4=$(echo -e "$jdCookie_team_part1$jdCookie_team_part2")
+                jdCookie_4=$combined_all
                 if [[ $jdCookie_4 ]]; then
                     export JD_COOKIE="$jdCookie_4"
                     #[[ $DEBUG_MODE = 1 ]] && echo $jdCookie_4
                     if [[ $local_scr == *.js ]]; then
+                        echo -e "\n# 本次提交的是第 $j 组账号。"
                         if [ $temp_status = 3 ]; then
                             node /ql/scripts/$local_scr
                             [[ $interval_time != "0" ]] && echo -e "# 等待 $interval_time 秒后开始进行下一组队任务 ..."
@@ -433,14 +433,7 @@ Recombin_CK_cal() {
             exit
         }
 
-        local teamer_num="$1"
-        local team_num="$2"
-        local p q
-        if [[ $1 ]] && [[ $2 ]]; then
-            # 每组队伍的成员数量
-            [[ -n "$(echo $1 | sed -n "/^[0-9]\+$/p")" ]] && teamer_num=$1 || teamer_num=$user_sum
-            # 单个账号最多发起的组队数量
-            [[ -n "$(echo $2 | sed -n "/^[0-9]\+$/p")" ]] && team_num=$2 || team_num=1
+        run_js_in_team() {
             if [[ $teamer_num -ge $user_sum ]]; then
                 echo "# 每组队伍的成员数量不得大于或等于有效账号总数量，切换回正常 Cookie 模式..."
                 export JD_COOKIE="$tmp_jdCookie"
@@ -449,46 +442,70 @@ Recombin_CK_cal() {
                 export JD_COOKIE="$tmp_jdCookie"
             else
                 echo "# 正在应用 组队Cookie 模式..."
-                [[ $team_num -ge $((user_sum / teamer_num)) ]] && team_num=$((user_sum / teamer_num)) && [[ $team_num -lt 1 ]] && team_num=1
-                echo -e "# 当前总共 $user_sum 个有效账号，每支队伍包含 $1 个账号，每个账号可以发起 $2 次组队。"
-                if [[ -n "$(echo $3 | perl -pe "{s|\.\|s\|m\|h\|d||g}" | sed -n "/^[0-9]\+$/p")" ]]; then
+                #总组队数量
+                team_num_total=$(((user_sum + teamer_num - 2) / (teamer_num - 1)))
+                #前几个账号发起组队
+                team_num_launch=$(((team_num_total + team_num - 1) / team_num))
+                [[ $team_num -ge $team_num_total ]] && team_num=$team_num_total && [[ $team_num -lt 1 ]] && team_num=1
+                echo -n "# 当前总共 $user_sum 个有效账号，其中前 $team_num_launch 个账号发起组队，每个账号最多可以发起 $team_num 次组队，一共组 $team_num_total 队，每支队伍最多包含 $teamer_num 个账号。"
+                if [[ -n "$(echo $1 | perl -pe "{s|\.\|s\|m\|h\|d||g}" | sed -n "/^[0-9]\+$/p")" ]]; then
                     temp_status="1"
-                    local delay_time="$(echo $3 | perl -pe "{s|([a-z])(\d)+|\1 \2|g;}")"
-                    echo -e "各支队伍启动脚本的延隔时间为$(format_time $3)。"
-                elif [[ $3 = 0 ]]; then
+                    local delay_time="$(echo $1 | perl -pe "{s|([a-z])(\d)+|\1 \2|g;}")"
+                    echo -e "各支队伍启动脚本的延隔时间为$(format_time $1)。"
+                elif [[ $1 = 0 ]]; then
                     temp_status="2"
                     local delay_time="0"
                     echo -e "所有队伍并发启动脚本，可能会占用较高的系统资源导致卡顿。"
-                elif [[ $3 = "-" ]] && [[ -n "$(echo $4 | perl -pe "{s|\.\|s\|m\|h\|d||g}" | sed -n "/^[0-9]\+$/p")" ]]; then
+                elif [[ $1 = "-" ]] && [[ -n "$(echo $2 | perl -pe "{s|\.\|s\|m\|h\|d||g}" | sed -n "/^[0-9]\+$/p")" ]]; then
                     temp_status="3"
-                    local interval_time="$(echo $4 | perl -pe "{s|([a-z])(\d)|\1 \2|g;}")"
-                    echo -e "各支队伍启动脚本的间隔时间为$(format_time $4)。"
+                    local interval_time="$(echo $2 | perl -pe "{s|([a-z])(\d)|\1 \2|g;}")"
+                    echo -e "各支队伍启动脚本的间隔时间为$(format_time $2)。"
                 else
                     temp_status="3"
                     delay_time="0"
                     interval_time="0"
+                    echo -e ""
                 fi
-                if [[ ${activity_env[0]} ]]; then
-                    if [[ $5 = 0 ]]; then
-                        for p in ${activity_env[@]}; do
-                            activity_array=($(echo $p | perl -pe "{s|@| |g}"))
-                            export jd_zdjr_activityId=${activity_array[0]}
-                            export jd_zdjr_activityUrl=${activity_array[1]}
-                            echo -e "活动ID(activityId)   : $jd_zdjr_activityId"
-                            echo -e "活动链接(activityUrl): $jd_zdjr_activityUrl"
-                            run_js_in_team
-                        done
-                    elif [[ $5 -gt 0 ]]; then
-                        q=$(($5 - 1))
-                        activity_array=($(echo ${activity_env[q]} | perl -pe "{s|@| |g}"))
-                        export jd_zdjr_activityId=${activity_array[0]}
-                        export jd_zdjr_activityUrl=${activity_array[1]}
-                        run_js_in_team
-                    fi
-                else
-                    run_js_in_team
-                fi
+                team_ck
             fi
+        }
+        local p q
+        if [[ $1 ]] && [[ $2 ]]; then
+            if [[ $1 = "-" ]] && [[ $2 = "-" ]] && [[ -n "$(echo $5 | sed -n "/^[0-9]\+$/p")" ]]; then
+                if [[ $5 = 0 ]]; then
+                    for p in ${activity_env[@]}; do
+                        activity_array=($(echo $p | perl -pe "{s|@| |g}"))
+                        teamer_num=${activity_array[0]}
+                        team_num=${activity_array[1]}
+                        export jd_zdjr_activityId=${activity_array[2]}
+                        export jd_zdjr_activityUrl=${activity_array[3]}
+                        echo -e "活动 ID (activityId) : $jd_zdjr_activityId"
+                        echo -e "活动链接(activityUrl): $jd_zdjr_activityUrl"
+                        run_js_in_team $3 $4
+                    done
+                elif [[ $5 -gt 0 ]]; then
+                    q=$(($5 - 1))
+                    activity_array=($(echo ${activity_env[q]} | perl -pe "{s|@| |g}"))
+                    teamer_num=${activity_array[0]}
+                    team_num=${activity_array[1]}
+                    export jd_zdjr_activityId=${activity_array[2]}
+                    export jd_zdjr_activityUrl=${activity_array[3]}
+                    echo -e "活动 ID (activityId) : $jd_zdjr_activityId"
+                    echo -e "活动链接(activityUrl): $jd_zdjr_activityUrl"
+                    run_js_in_team $3 $4
+                fi
+            elif [[ -n "$(echo $1 | sed -n "/^[0-9]\+$/p")" ]] && [[ -n "$(echo $2 | sed -n "/^[0-9]\+$/p")" ]]; then
+                # 每组队伍的成员数量
+                teamer_num=$1
+                # 单个账号最多发起的组队数量
+                team_num=$2
+            else
+                # 每组队伍的成员数量
+                teamer_num=$user_sum
+                # 单个账号最多发起的组队数量
+                team_num=1
+            fi
+            run_js_in_team $3 $4
         else
             echo "# 由于参数缺失，切换回 正常 Cookie 模式..."
             export JD_COOKIE="$tmp_jdCookie"
@@ -504,20 +521,20 @@ Recombin_CK_cal() {
             # 固定区账号数量
             [[ -n "$(echo $1 | sed -n "/^[0-9]\+$/p")" ]] && fixed_num=$1 || fixed_num="0"
             # 每段账号总数量
-            [[ -n "$(echo $2 | sed -n "/^[0-9]\+$/p")" ]] && segment_length=$2 || segment_length=$user_sum
-            if [[ $fixed_num -ge $segment_length ]]; then
+            [[ -n "$(echo $2 | sed -n "/^[0-9]\+$/p")" ]] && teamer_total_num=$2 || teamer_total_num=$user_sum
+            if [[ $fixed_num -ge $teamer_total_num ]]; then
                 echo "# 固定账号数量不得大于或等于每段账号总数量，切换回正常 Cookie 模式..."
                 export JD_COOKIE="$tmp_jdCookie"
-            elif [[ $segment_length -ge $user_sum ]]; then
+            elif [[ $teamer_total_num -ge $user_sum ]]; then
                 echo "# 分段账号数量不得大于或等于有效账号总数量，切换回正常 Cookie 模式..."
                 export JD_COOKIE="$tmp_jdCookie"
-            elif [[ $fixed_num -lt $segment_length ]]; then
+            elif [[ $fixed_num -lt $teamer_total_num ]]; then
                 echo "# 正在应用 分段Cookie 模式..."
-                local team_length="$((segment_length - fixed_num))"
-                local team_total_num=$(((user_sum - fixed_num + team_length - 1) / team_length)) && [[ $team_total_num -lt 1 ]] && team_total_num=1
+                local teamer_num="$((teamer_total_num - fixed_num))"
+                local team_total_num=$(((user_sum - fixed_num + teamer_num - 1) / teamer_num)) && [[ $team_total_num -lt 1 ]] && team_total_num=1
                 echo -n "# 当前总共 $user_sum 个有效账号"
                 [[ $fixed_num -ne 0 ]] && echo -n "，其中前 $fixed_num 个账号为固定顺序"
-                echo -n "。每 $segment_length 个账号分一段，一共分 $team_total_num 段。"
+                echo -n "。每 $teamer_total_num 个账号分一段，一共分 $team_total_num 段。"
                 if [[ -n "$(echo $3 | perl -pe "{s|\.\|s\|m\|h\|d||g}" | sed -n "/^[0-9]\+$/p")" ]]; then
                     temp_status="1"
                     local delay_time="$(echo $3 | perl -pe "{s|([a-z])(\d)+|\1 \2|g;}")"
@@ -536,7 +553,7 @@ Recombin_CK_cal() {
                     temp_status="3"
                     delay_time="0"
                     interval_time="0"
-                    echo -e "各分段启动脚本的间隔时间为$(format_time $4)。"
+                    echo -e ""
                 fi
                 for ((m = 0; m < $fixed_num; m++)); do
                     tmp="${array[m]}"
@@ -544,8 +561,8 @@ Recombin_CK_cal() {
                 done
                 for ((i = 0; i < $team_total_num; i++)); do
                     j=$((i + 1))
-                    m=$((team_length * i + fixed_num))
-                    n=$((team_length * j + fixed_num))
+                    m=$((teamer_num * i + fixed_num))
+                    n=$((teamer_num * j + fixed_num))
                     t=$n && [[ $user_sum -lt $t ]] && t=$user_sum
                     jdCookie_team_part=""
                     for ((k = m; k < $n; k++)); do
@@ -557,13 +574,12 @@ Recombin_CK_cal() {
                         export JD_COOKIE="$jdCookie_4"
                         #[[ $DEBUG_MODE = 1 ]] && echo $jdCookie_4
                         if [[ $local_scr == *.js ]]; then
+                            [[ $fixed_num -ne 0 ]] && echo -e "\n# 本次提交的是前 $fixed_num 位账号及第 $((m + 1)) - $n 位账号。" || echo -e "\n# 本次提交的是第 $((m + 1)) - $n 位账号。"
                             if [ $temp_status = 3 ]; then
-                                [[ $fixed_num -ne 0 ]] && echo -e "# 本次提交的是前 $fixed_num 位账号及第 $((m + 1)) - $n 位账号。" || echo -e "# 本次提交的是第 $((m + 1)) - $n 位账号。"
                                 node /ql/scripts/$local_scr
                                 [[ $interval_time != "0" ]] && echo -e "# 等待$(format_time $interval_time)后开始进行下一段任务 ..."
                                 sleep $interval_time
                             else
-                                [[ $fixed_num -ne 0 ]] && echo -e "# 本次提交的是前 $fixed_num 位账号及第 $((m + 1)) - $n 位账号。" || echo -e "# 本次提交的是第 $((m + 1)) - $n 位账号。"
                                 node /ql/scripts/$local_scr &
                                 sleep $delay_time
                             fi
@@ -594,12 +610,6 @@ Recombin_CK_cal() {
     [[ $jdCookie_4 ]] && array=($(echo $jdCookie_4 | sed 's/&/ /g')) && user_sum=${#array[*]}
     ## 移除无效 Cookie
     [[ $Recombin_CK_Mode ]] && [[ $Remove_Void_CK = 1 ]] && remove_void_ck
-    # Recombin_CK_ARG1 参数基本判断
-    if [ -n "$(echo $Recombin_CK_ARG1 | sed -n "/^[0-9]\+$/p")" ]; then
-        [[ $user_sum -lt $Recombin_CK_ARG1 || $Recombin_CK_ARG1 -lt 0 ]] && Recombin_CK_ARG1=$user_sum
-    else
-        Recombin_CK_ARG1=""
-    fi
 
     case $Recombin_CK_Mode in
     1)
@@ -697,20 +707,16 @@ JS_Deps_Replace() {
             local tmp_script_array=($(echo ${tmp_task_array[0]} | perl -pe "{s/\|/ /g}"))
             local tmp_skip_repo=($(echo ${tmp_task_array[1]} | perl -pe "{s/\|/ /g}"))
             for j in "${tmp_script_array[@]}"; do
-                [[ ! ${tmp_skip_repo[@]} =~ $repo_dir ]] && [[ -f $dir_config/$j.js ]] && [[ $local_scr_dir ]] && cp -rvf $dir_config/$j.js $local_scr_dir/$j.js
+                [[ ! $repo_dir ]] || [[ $repo_dir && ! ${tmp_skip_repo[@]} =~ $repo_dir ]] && [[ -f $dir_config/$j.js && $local_scr_dir ]] && cp -rvf $dir_config/$j.js $local_scr_dir/$j.js
             done
         done
     fi
 }
 
-## 魔改版 jdCookie.js 复制到 /ql/deps/。仅支持v2.10.8及以上版本的青龙
-## [[ -d $dir_dep && -f $dir_config/jdCookie.js ]] && cp -rf $dir_config/jdCookie.js $dir_dep
-## 魔改版 jdCookie.js 和 sendNotify.js 覆盖到 /ql/scripts/及子路径下的所有 jdCookie.js。支持v2.10.8 以下版本的青龙
-## [[ -f $dir_config/$i.js ]] && find $dir_scripts ! \( -path "*JDHelloWorld*" -o -path "*ccwav*" \) -type f -name $i|xargs -n 1 cp -rf $dir_config/$i.js && cp -rf $dir_config/$i.js $dir_scripts
-## [[ -f $dir_config/$i.js ]] && cp -rf $dir_config/$i.js $local_scr_dir/
-
-JS_Deps_Replace && TempBlock_CK && Recombin_CK
-
+[[ -f $dir_config/jdCookie.js && $local_scr_dir ]] && cp -rvf $dir_config/jdCookie.js $local_scr_dir/jdCookie.js
+JS_Deps_Replace
+TempBlock_CK
+Recombin_CK
 combine_only
 
 #if [[ $(ls $dir_code) ]]; then
