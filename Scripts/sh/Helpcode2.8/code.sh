@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 
-## Build 20211208-001-test
+## Build 20211217-001-test
 
 ## 导入通用变量与函数
-dir_shell=/ql/shell
-. $dir_shell/share.sh
+#dir_shell=/ql/shell
+#. $dir_shell/share.sh
+## 目录
+dir_root=/ql
+dir_config=$dir_root/config
+dir_scripts=$dir_root/scripts
+dir_log=$dir_root/log
+dir_db=$dir_root/db
+dir_code=$dir_log/code
 
 ## 预设的仓库及默认调用仓库设置
 ## 将"repo=$repo1"改成repo=$repo2"或其他，以默认调用其他仓库脚本日志
@@ -84,7 +91,7 @@ UpdateType="1"
 ## 定义是否自动安装或修复缺失的依赖，默认为1，表示自动修复；留空或其他数值表示不修复。
 FixDependType=""
 ## 定义监控修复的依赖名称
-package_name="canvas png-js date-fns axios crypto-js ts-md5 tslib @types/node dotenv got md5 requests typescript fs require tslib jsdom download js-base64 tough-cookie tunnel ws qrcode-terminal jieba prettytable form-data json5 global-agent"
+package_name="canvas png-js date-fns axios crypto-js ts-md5 tslib @types/node dotenv got md5 requests typescript fs require jsdom download js-base64 tough-cookie tunnel ws jieba prettytable form-data json5 global-agent"
 
 ## 需组合的环境变量列表，env_name需要和var_name一一对应，如何有新活动按照格式添加(不懂勿动)
 env_name=(
@@ -590,8 +597,10 @@ update_help() {
             backup_del
             echo -e "\n#【$(date +%X)】 开始更新配置文件的互助码和互助规则"
             for ((i = 0; i < ${#name_config[*]}; i++)); do
-                help_codes "${name_config[i]}" "${name_chinese[i]}"
-                [[ "${name_config[i]}" != "TokenJxnc" ]] && help_rules "${name_config[i]}" "${name_chinese[i]}"
+                {
+                    help_codes "${name_config[i]}" "${name_chinese[i]}"
+                    [[ "${name_config[i]}" != "TokenJxnc" ]] && help_rules "${name_config[i]}" "${name_chinese[i]}"
+                } &
             done
             echo -e "\n#【$(date +%X)】 配置文件的互助码和互助规则已完成更新"
         elif [ ! -f $latest_log_path ]; then
@@ -603,7 +612,7 @@ update_help() {
             backup_del
             echo -e "\n#【$(date +%X)】 开始更新配置文件的互助码，不更新互助规则"
             for ((i = 0; i < ${#name_config[*]}; i++)); do
-                help_codes "${name_config[i]}" "${name_chinese[i]}"
+                help_codes "${name_config[i]}" "${name_chinese[i]}" &
             done
             echo -e "\n#【$(date +%X)】 配置文件的互助码已完成更新"
         elif [ ! -f $latest_log_path ]; then
@@ -615,7 +624,7 @@ update_help() {
             backup_del
             echo -e "\n#【$(date +%X)】 开始更新配置文件的互助规则，不更新互助码"
             for ((i = 0; i < ${#name_config[*]}; i++)); do
-                [[ "${name_config[i]}" != "TokenJxnc" ]] && help_rules "${name_config[i]}" "${name_chinese[i]}"
+                [[ "${name_config[i]}" != "TokenJxnc" ]] && help_rules "${name_config[i]}" "${name_chinese[i]}" &
             done
             echo -e "\n#【$(date +%X)】 配置文件的互助规则已完成更新"
         elif [ ! -f $latest_log_path ]; then

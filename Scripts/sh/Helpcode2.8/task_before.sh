@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Build 20211214-002-test
+## Build 20211217-001-test
 
 name_js=(
     jd_fruit
@@ -102,13 +102,31 @@ local_scr=$1
 repo_dir=""
 sub_dir_scripts="$(ls -l $dir_scripts | awk '/^d/ {print $NF}')"
 if [[ ! $local_scr =~ "/" ]] || [[ $local_scr == $dir_scripts/[^/]* ]]; then
+    local_scr_name="$(echo ${local_scr##*/})"
     local_scr_dir="$dir_scripts"
 elif [[ $local_scr == */* ]] && [[ ! $local_scr =~ ql ]]; then
+    local_scr_name="$(echo ${local_scr##*/})"
     repo_dir="$(echo $local_scr | awk -F '/' '{print $(NF-1)}')"
     [[ $sub_dir_scripts[@] =~ $repo_dir ]] && local_scr_dir="$dir_scripts/$repo_dir"
 else
     local_scr_dir=""
 fi
+
+## 选择python3还是node
+define_program() {
+    local first_param=$1
+    if [[ $first_param == *.js ]]; then
+        which_program="node"
+    elif [[ $first_param == *.py ]]; then
+        which_program="python3"
+    elif [[ $first_param == *.sh ]]; then
+        which_program="bash"
+    elif [[ $first_param == *.ts ]]; then
+        which_program="ts-node-transpile-only"
+    else
+        which_program=""
+    fi
+}
 
 ## 生成pt_pin清单
 gen_pt_pin_array() {
@@ -187,13 +205,19 @@ TempBlock_CK() {
         local user_sum=${#array[*]}
         local TempBlockCookie="$(eval echo $(echo $TempBlockCookie | perl -pe "{s|~\|-|_|g; s|\W+\|[A-Za-z]+| |g; s|(\d+)_(\d+)|{\1..\2}|g;}"))"
         local TempBlockPin="$(echo $TempBlockPin | perl -pe "{s|,| |g;}")"
+        local TempDesiPin="$(echo $TempDesiPin | perl -pe "{s|,| |g;}")"
         local TempBlockCookieArray=($TempBlockCookie)
         local TempBlockPinArray=($TempBlockPin)
-        local i j k m jdCookie_3
+        local TempDesiPinArray=($TempDesiPin)
+        echo TempBlockCookie：$TempBlockCookie
+        echo TempBlockPin：$TempBlockPin
+        echo TempDesiPin：$TempDesiPin
+        local i j k m n jdCookie_3
+        local TempDesiCKArray=()
         for ((i = 1; i <= $user_sum; i++)); do
             j=$((i - 1))
-            for ((k = 0; k < ${#TempBlockCookieArray[*]}; k++)); do
-                [[ "${TempBlockCookieArray[k]}" = "$i" ]] && unset array[j]
+            for k in ${TempBlockCookieArray[@]}; do
+                [[ $k = $i ]] && unset array[j]
             done
             pt_pin_temp=$(echo ${array[j]} | perl -pe "{s|.*pt_pin=([^; ]+)(?=;?).*|\1|; s|%|\\\x|g}")
             [[ $pt_pin_temp == *\\x* ]] && pt_pin[j]=$(printf $pt_pin_temp) || pt_pin[j]=$pt_pin_temp
@@ -202,7 +226,17 @@ TempBlock_CK() {
                 [[ $pt_pin_temp_block == *\\x* ]] && pt_pin_block[m]=$(printf $pt_pin_temp_block) || pt_pin_block[m]=$pt_pin_temp_block
                 [[ "${pt_pin[j]}" =~ "${pt_pin_block[m]}" ]] && unset array[j]
             done
+            if [[ ${TempDesiPinArray[0]} ]]; then
+                for ((n = 0; n < ${#TempDesiPinArray[*]}; n++)); do
+                    pt_pin_temp_desi=$(echo ${TempDesiPinArray[n]} | perl -pe "{s|%|\\\x|g}")
+                    [[ $pt_pin_temp_desi == *\\x* ]] && pt_pin_desi[n]=$(printf $pt_pin_temp_desi) || pt_pin_desi[n]=$pt_pin_temp_desi
+                    if [[ ${pt_pin[j]} =~ ${pt_pin_desi[n]} ]]; then
+                        TempDesiCKArray[n]=${array[j]}
+                    fi
+                done
+            fi
         done
+        [[ ${TempDesiPinArray[0]} ]] && array=() && array=${TempDesiCKArray[@]}
         jdCookie_1=$(echo ${array[*]} | sed 's/\ /\&/g')
         [[ $jdCookie_1 ]] && export JD_COOKIE="$jdCookie_1"
         user_sum_1=${#array[*]}
@@ -218,8 +252,9 @@ TempBlock_CK() {
                     local tmp_script_array=($(echo ${tmp_task_array[0]} | perl -pe "{s/\|/ /g}"))
                     for j in ${tmp_script_array[@]}; do
                         if [[ $local_scr == *$j* ]]; then
-                            [[ $(echo ${tmp_task_array[1]} | perl -pe "{s|\D||g;}") ]] && TempBlockCookie=${tmp_task_array[1]} || TempBlockCookie=""
+                            [[ $(echo ${tmp_task_array[1]} | perl -pe "{s|\D||g;}") ]] && TempBlockCookie="${tmp_task_array[1]}" || TempBlockCookie=""
                             TempBlockPin=${tmp_task_array[2]}
+                            TempDesiPin=${tmp_task_array[3]}
                             break
                         fi
                     done
@@ -227,7 +262,7 @@ TempBlock_CK() {
             fi
         done
     fi
-    if [[ $TempBlockCookie ]] || [[ $TempBlockPin ]]; then
+    if [[ $TempBlockCookie ]] || [[ $TempBlockPin ]] || [[ $TempDesiPin ]]; then
         TempBlock_JD_COOKIE
     else
         export JD_COOKIE="$tmp_jdCookie"
@@ -245,7 +280,7 @@ Recombin_CK() {
         source $file_env
         tmp_jdCookie=$JD_COOKIE
     fi
-
+    #[[ $DEBUG_MODE = 1 ]] && echo $tmp_jdCookie | sed 's/&/\n/g' > /ql/config/1.txt
     ## JD_COOKIE 基本分析
     local envs=$(eval echo "\$tmp_jdCookie")
     array=($(echo $envs | sed 's/&/ /g'))
@@ -343,6 +378,7 @@ Recombin_CK_cal() {
         local combined_all rot_num rot_start_num jdCookie_priority jdCookie_rot_head jdCookie_rot_mid tmp_1 tmp_2 tmp_3 a b c
         # 固定区账号数量
         [[ -n "$(echo $1 | sed -n "/^[0-9]\+$/p")" ]] && fixed_num=$1 || fixed_num="0"
+        combine_bottom
         if [[ $fixed_num -ge $user_sum ]]; then
             echo "# 固定账号数量不得大于或等于有效账号总量，切换回正常 Cookie 模式..."
             export JD_COOKIE="$tmp_jdCookie"
@@ -356,7 +392,8 @@ Recombin_CK_cal() {
                 rot_start_num=$((fixed_num + rot_num * ((today_day - 1))))
                 while [[ $user_sum -lt $((rot_start_num + 1)) ]]; do rot_start_num=$((rot_start_num - rot_total_num)); done
                 echo -n "# 当前总共 $user_sum 个有效账号"
-                [[ $fixed_num -gt 0 ]] && echo -e "，其中前 $fixed_num 个账号为固定顺序。" || echo -e "，所有账号参与轮换。"
+                [[ $fixed_num -gt 0 ]] && echo -n "，其中前 $fixed_num 个账号为固定顺序" || echo -n "，所有账号参与轮换"
+                [[ $user_bottom_sum -gt 0 ]] && echo -e "，有 $user_bottom_sum 个账号固定在末尾。" || echo -e "。"
                 echo -e "# 今天从第 $((rot_start_num + 1)) 个账号开始轮换，轮换频次为：$rot_num 个账号/天。"
                 for ((a = 0; a < fixed_num; a++)); do
                     tmp_1="${array[a]}"
@@ -370,10 +407,10 @@ Recombin_CK_cal() {
                     tmp_3="${array[c]}"
                     jdCookie_rot_mid="$jdCookie_rot_mid&$tmp_3"
                 done
-                combined_all="$jdCookie_priority$jdCookie_rot_head$jdCookie_rot_mid"
+                combined_all="$jdCookie_priority$jdCookie_rot_head$jdCookie_rot_mid$jdCookie_bottom"
                 jdCookie_4=$(echo $combined_all | perl -pe "{s|^&||; s|&$||}")
                 [[ $jdCookie_4 ]] && export JD_COOKIE="$jdCookie_4"
-                #[[ $DEBUG_MODE = 1 ]] && echo $jdCookie_4
+                #[[ $DEBUG_MODE = 1 ]] && echo $jdCookie_4 | sed 's/&/\n/g' > /ql/config/2.txt
             else
                 echo "# 由于参加轮换的账号数量不足 2 个，切换回正常 Cookie 模式..."
                 export JD_COOKIE="$tmp_jdCookie"
@@ -417,16 +454,15 @@ Recombin_CK_cal() {
                 if [[ $jdCookie_4 ]]; then
                     export JD_COOKIE="$jdCookie_4"
                     #[[ $DEBUG_MODE = 1 ]] && echo $jdCookie_4
-                    if [[ $local_scr == *.js ]]; then
-                        echo -e "\n# 本次提交的是第 $j 组账号。"
-                        if [ $temp_status = 3 ]; then
-                            node /ql/scripts/$local_scr
-                            [[ $interval_time != "0" ]] && echo -e "# 等待 $interval_time 秒后开始进行下一组队任务 ..."
-                            sleep $interval_time
-                        else
-                            node /ql/scripts/$local_scr &
-                            sleep $delay_time
-                        fi
+                    echo -e "\n# 本次提交的是第 $j 组账号。"
+                    define_program "$local_scr"
+                    if [ $temp_status = 3 ]; then
+                        $which_program $local_scr_dir/$local_scr_name
+                        [[ $interval_time != "0" ]] && echo -e "# 等待 $interval_time 秒后开始进行下一组队任务 ..."
+                        sleep $interval_time
+                    else
+                        $which_program $local_scr_dir/$local_scr_name &
+                        sleep $delay_time
                     fi
                 fi
             done
@@ -563,6 +599,7 @@ Recombin_CK_cal() {
                     j=$((i + 1))
                     m=$((teamer_num * i + fixed_num))
                     n=$((teamer_num * j + fixed_num))
+                    [[ $n -gt $user_sum ]] && n=$user_sum
                     t=$n && [[ $user_sum -lt $t ]] && t=$user_sum
                     jdCookie_team_part=""
                     for ((k = m; k < $n; k++)); do
@@ -573,16 +610,27 @@ Recombin_CK_cal() {
                     if [[ $jdCookie_4 ]]; then
                         export JD_COOKIE="$jdCookie_4"
                         #[[ $DEBUG_MODE = 1 ]] && echo $jdCookie_4
-                        if [[ $local_scr == *.js ]]; then
-                            [[ $fixed_num -ne 0 ]] && echo -e "\n# 本次提交的是前 $fixed_num 位账号及第 $((m + 1)) - $n 位账号。" || echo -e "\n# 本次提交的是第 $((m + 1)) - $n 位账号。"
-                            if [ $temp_status = 3 ]; then
-                                node /ql/scripts/$local_scr
-                                [[ $interval_time != "0" ]] && echo -e "# 等待$(format_time $interval_time)后开始进行下一段任务 ..."
-                                sleep $interval_time
-                            else
-                                node /ql/scripts/$local_scr &
-                                sleep $delay_time
+                        if [ $fixed_num -ne 0 ]; then
+                            if [ $team_total_num -gt 1 ]; then
+                                echo -e "\n# 本次提交的是前 $fixed_num 位账号及第 $((m + 1)) - $n 位账号。"
+                            elif [ $team_total_num -eq 1 ]; then
+                                echo -e "\n# 本次提交的是前 $fixed_num 位账号及第 $((m + 1)) 位账号。"
                             fi
+                        elif [ $fixed_num -eq 0 ]; then
+                            if [ $team_total_num -gt 1 ]; then
+                                echo -e "\n# 本次提交的是第 $((m + 1)) - $n 位账号。"
+                            elif [ $team_total_num -eq 1 ]; then
+                                echo -e "\n# 本次提交的是第 $((m + 1)) 位账号。"
+                            fi
+                        fi
+                        define_program "$local_scr"
+                        if [ $temp_status = 3 ]; then
+                            $which_program $local_scr_dir/$local_scr_name
+                            [[ $interval_time != "0" ]] && echo -e "# 等待$(format_time $interval_time)后开始进行下一段任务 ..."
+                            sleep $interval_time
+                        else
+                            $which_program $local_scr_dir/$local_scr_name &
+                            sleep $delay_time
                         fi
                     fi
                 done
@@ -591,6 +639,30 @@ Recombin_CK_cal() {
         else
             echo "# 由于参数缺失，切换回正常 Cookie 模式..."
             export JD_COOKIE="$tmp_jdCookie"
+        fi
+    }
+
+    ## 末尾Cookie
+    combine_bottom() {
+        local tmp combined_tmp
+        if [[ $Bottom_CK ]]; then
+            bottom_ck_array=($(echo $Bottom_CK | perl -pe "{s|,| |g;}"))
+            for a in ${!array[@]}; do
+                pt_pin_temp=$(echo ${array[a]} | perl -pe "{s|.*pt_pin=([^; ]+)(?=;?).*|\1|; s|%|\\\x|g}")
+                [[ $pt_pin_temp == *\\x* ]] && pt_pin[a]=$(printf $pt_pin_temp) || pt_pin[a]=$pt_pin_temp
+                for b in ${!bottom_ck_array[@]}; do
+                    pt_pin_temp_bottom=$(echo ${bottom_ck_array[b]} | perl -pe "{s|%|\\\x|g}")
+                    [[ $pt_pin_temp_bottom == *\\x* ]] && pt_pin_bottom[b]=$(printf $pt_pin_temp_bottom) || pt_pin_bottom[b]=$pt_pin_temp_bottom
+                    if [[ "${pt_pin[a]}" =~ "${pt_pin_bottom[b]}" ]]; then
+                        local tmp="${array[a]}"
+                        local combined_tmp="$tmp&$combined_tmp"
+                        unset array[a]
+                    fi
+                done
+            done
+            jdCookie_bottom="&$combined_tmp"
+            array_bottom=($(eval echo "\$combined_tmp" | perl -pe "{s|&| |g}"))
+            user_bottom_sum=${#array_bottom[*]}
         fi
     }
 
@@ -707,13 +779,13 @@ JS_Deps_Replace() {
             local tmp_script_array=($(echo ${tmp_task_array[0]} | perl -pe "{s/\|/ /g}"))
             local tmp_skip_repo=($(echo ${tmp_task_array[1]} | perl -pe "{s/\|/ /g}"))
             for j in "${tmp_script_array[@]}"; do
-                [[ ! $repo_dir ]] || [[ $repo_dir && ! ${tmp_skip_repo[@]} =~ $repo_dir ]] && [[ -f $dir_config/$j.js && $local_scr_dir ]] && cp -rvf $dir_config/$j.js $local_scr_dir/$j.js
+                [[ ! $repo_dir ]] || [[ $repo_dir && ! ${tmp_skip_repo[@]} =~ $repo_dir ]] && [[ -f $dir_config/$j.js && $local_scr_dir ]] && cp -rf $dir_config/$j.js $local_scr_dir/$j.js
             done
         done
     fi
 }
 
-[[ -f $dir_config/jdCookie.js && $local_scr_dir ]] && cp -rvf $dir_config/jdCookie.js $local_scr_dir/jdCookie.js
+[[ -f $dir_config/jdCookie.js && $local_scr_dir ]] && cp -rf $dir_config/jdCookie.js $local_scr_dir/jdCookie.js
 JS_Deps_Replace
 TempBlock_CK
 Recombin_CK
