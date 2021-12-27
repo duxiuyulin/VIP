@@ -1,6 +1,6 @@
 """
 const $ = new Env("统计东哥历史红包");
-统计东哥历史红包
+统计东哥历史红包 
 """
 
 import requests
