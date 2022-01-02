@@ -1,6 +1,6 @@
 /*
 cron "58 7,15,23 * * *" jd_joy_reward_Mod.js
- */
+ */ 
 //Mod by ccwav，20211014
 // prettier-ignore
 const $ = new Env('宠汪汪积分兑换有就换版');
