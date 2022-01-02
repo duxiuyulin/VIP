@@ -7,18 +7,21 @@
 搬运和同步更新大佬脚本，不负责维护脚本
 
 
-### 特别声明：
+## Special statement:
 
-1、本仓库发布的Script项目中涉及的任何解锁和解密分析脚本，仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断。
+* Any unlocking and decryption analysis scripts involved in the Script project released by this warehouse are only used for testing, learning and research, and are forbidden to be used for commercial purposes. Their legality, accuracy, completeness and effectiveness cannot be guaranteed. Please make your own judgment based on the situation. .
 
-2、本仓库内所有资源文件，禁止任何公众号、自媒体进行任何形式的转载、发布。
+* All resource files in this project are forbidden to be reproduced or published in any form by any official account or self-media.
 
-3、duxiuyulin对任何脚本问题概不负责，包括但不限于由任何脚本错误导致的任何损失或损害。
+* This warehouse is not responsible for any script problems, including but not limited to any loss or damage caused by any script errors.
 
-4、间接使用脚本的任何用户，包括但不限于建立VPS或在某些行为违反国家/地区法律或相关法规的情况下进行传播, duxiuyulin对于由此引起的任何隐私泄漏或其他后果概不负责。
+* Any user who indirectly uses the script, including but not limited to establishing a VPS or disseminating it when certain actions violate national/regional laws or related regulations, this warehouse is not responsible for any privacy leakage or other consequences caused by this.
 
-5、请勿将Script项目的任何内容用于商业或非法目的，否则后果自负，duxiuyulin对此引起的一切后果概不负责。
+* Do not use any content of the Script project for commercial or illegal purposes, otherwise you will be responsible for the consequences.
 
-6、如果任何单位或个人认为该项目的脚本可能涉嫌侵犯其权利，请及时通知并提供身份证明，所有权证明，我们将在收到认证文件后删除相关脚本文件。
+* If any unit or individual believes that the script of the project may be suspected of infringing on their rights, they should promptly notify and provide proof of identity and ownership. We will delete the relevant script after receiving the certification document.
 
-7、任何以任何方式查看此项目的人或直接或间接使用该Script项目的任何脚本的使用者都需仔细阅读此声明。duxiuyulin保留随时更改或补充此免责声明的权利。一旦使用并复制了任何相关脚本或Script项目的规则，则视为您已接受此免责声明，并对自己行为负责。
+* Anyone who views this item in any way or directly or indirectly uses any script of the Script item should read this statement carefully. This warehouse reserves the right to change or supplement this disclaimer at any time. Once you have used and copied any relevant scripts or rules of the Script project, you are deemed to have accepted this disclaimer.
+
+ **You must completely delete the above content from your computer or mobile phone within 24 hours after downloading.**  </br>
+> ***You have used or copied any script made by yourself in this warehouse, it is deemed to have accepted this statement, please read it carefully*** 
