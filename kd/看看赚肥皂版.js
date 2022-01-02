@@ -3,7 +3,7 @@
 //主机名1  kd.youth.cn       
 //主机名2  kandian.wkandian.com
 
-//青龙  zqkkzurl  重写1的整个url    多账号@
+//青龙环境变量  zqkkzurl  重写1的整个url    多账号@
 //      zqkkzlbhd  重写1的header
 //		zqkkzrwhd  重写2的header
 //		zqkkzbody  重写2的body
