@@ -1,29 +1,17 @@
 /*
 安卓：中青看点极速版 （快应用，非IOS极速版，跟普通版青豆数据独立，普通版黑了也可以用）
-邀请链接：https://user.youth.cn/h5/fastAppWeb/invite/invite_ground.html?share_uid=1037638361&channel=c8000&nickname=%E6%AF%8D%E8%80%81%E8%99%8E%E5%A5%B6%E8%8C%B6&avatar=http%3A%2F%2Fres.youth.cn%2Favatar_202201_04_04r_61d4470b744c11037637302y.jpg&v=1641305085
+邀请链接：https://user.youth.cn/h5/fastAppWeb/invite/invite_ground.html?share_uid=1037640800&channel=c8000&nickname=%E5%A4%9A%E5%A4%9A%E7%8B%97&avatar=http%3A%2F%2Fres.youth.cn%2Favatar_202201_05_05x_61d4fc932c6361037637302w.jpg&v=1641351700
 
 支持快应用的安卓手机才能玩
-别再问圈X了，改了改了改了，没有圈X，你要捉了包自己放到圈X跑也不是不行
-
-本脚本负责阅读文章，只需要ck即可
-定时自己看着改吧，我也不知道一天几次能跑满阅读收益，可能十来次吧
-25 8-22 * * *
-
-青龙：
-捉包找uid=xxxx&token=xxxxx&token_id=xxxxx，填到变量zqkdFastCookie里，多账号用@连接
-
-V2P 重写：
-[rewrite_local]
-https://user.youth.cn/FastApi/NewTaskSimple/getTaskList  https://raw.githubusercontent.com/leafxcy/JavaScript/main/zqkdFast/zqkdFast_read.js
-[MITM]
-user.youth.cn
+本脚本负责抽奖和PK等日常任务，需要zqkdFastCookie，自己捉包或者用文章的重写获取ck
+5,35 8-20 * * *
 */
 
-const jsname = '中青极速版文章视频'
+const jsname = '中青极速版日常'
 const $ = Env(jsname)
 const logDebug = 0
 
-const updateStr = '2022.01.05 11:17 增加延迟'
+const updateStr = '2022.01.06 0:17 中青极速版 日常任务 初版'
 
 let rndtime = "" //毫秒
 let httpResult //global buffer
@@ -33,12 +21,9 @@ let userCookieArr = []
 
 let userIdx = 0
 let userCount = 0
-let userReadList = []
 
-let maxReadNum = 0
-
-let ART_ID = 0
-let VIDEO_ID = 1453
+let maxTurnNum = 0
+let turnNum = []
 
 ///////////////////////////////////////////////////////////////////
 
@@ -50,26 +35,21 @@ let VIDEO_ID = 1453
         
         if(!(await checkEnv())) return
         
+        console.log('\n准备PK')
         for(userIdx=0; userIdx < userCount; userIdx++) {
-            await ListArts(userIdx,VIDEO_ID,ART_ID)
-            await ListArts(userIdx,ART_ID,VIDEO_ID)
+            await GetFightList(userIdx)
         }
         
-        for(let i=0; i<maxReadNum; i++) {
-            console.log(`\n第${i+1}轮阅读`)
+        console.log('\n准备抽奖')
+        for(userIdx=0; userIdx < userCount; userIdx++) {
+            await GetRotaryInfo(userIdx)
+        }
+        for(let i=0; i<maxTurnNum; i++) {
+            console.log(`\n开始第${i+1}轮抽奖`)
             for(userIdx=0; userIdx < userCount; userIdx++) {
-                if(i<userReadList[userIdx].length) {
-                    ReadArts(userIdx,i)
-                    await $.wait(200)
-                }
+                if(i<turnNum[userIdx]) await TurnRotary(userIdx)
             }
-            for(userIdx=0; userIdx < userCount; userIdx++) {
-                if(i<userReadList[userIdx].length) {
-                    CompleteArts(userIdx,i)
-                    await $.wait(200)
-                }
-            }
-            await $.wait(Math.floor(Math.random()*30000) + 5000)
+            await $.wait(1000)
         }
     }
 })()
@@ -86,7 +66,7 @@ async function checkEnv() {
         return false
     }
     
-    for(let idx in userCookieArr) userReadList.push([])
+    for(let ck of userCookieArr) turnNum.push(0)
     
     console.log(`共找到${userCount}个CK`)
     return true
@@ -117,61 +97,123 @@ async function GetRewrite() {
     }
 }
 ///////////////////////////////////////////////////////////////////
-async function ListArts(userIdx,cid,vid) {
+async function GetFightList(userIdx) {
     let caller = printCaller()
+    let rndtimeInMs = Math.floor(new Date().getTime())
+    let rndtimeInS = Math.round(rndtimeInMs/1000)
     let userCk = userCookieArr[userIdx]
     let uid = userCk.match(/uid=(\w+)/)[1]
-    let url = `https://user.youth.cn/FastApi/article/lists.json?catid=${cid}&video_catid=${vid}&op=0&behot_time=0&&app_version=2.5.5&${userCk}`
-    let urlObject = populateGetUrl(url)
-    await httpGet(urlObject,caller)
+    let body = `app_version=2.5.5&channel=c6001&${userCk}&device_model=OPPOR9tm&device_brand=OPPO&resolution=1080*1920&os_version=22&is_wxaccount=1&active_channel=c6001&access=wifi&v=${rndtime}&request_time=${rndtimeInS}`
+    let url = `https://user.youth.cn/FastApi/Activity/getFightList.json`
+    let urlObject = populatePostUrl(url,body)
+    await httpPost(urlObject,caller)
     let result = httpResult;
     if(!result) return
     
-    let typeStr = (cid==1453) ? '视频' : '文章'
     if(result.error_code == 0) {
-        for(let item of result.items) {
-            userReadList[userIdx].push(item.signature)
+        if(result.items.last_start_time) {
+            console.log(`用户${userIdx+1}[${uid}]距离下一次PK还有${result.items.last_start_time}秒`)
+            return
         }
-        maxReadNum = getMax(maxReadNum,userReadList[userIdx].length)
-        console.log(`用户${userIdx+1}[${uid}]找到${result.items.length}${typeStr}`)
+        let pkList = result.items.pk_list.filter(x => x.status==0)
+        if(pkList.length > 0) {
+            await $.wait(500)
+            await PkFightGame(userIdx,pkList[0].pk_uid)
+        }
     } else {
-        console.log(`用户${userIdx+1}[${uid}]获取${typeStr}列表失败：${result.message}`)
+        console.log(`用户${userIdx+1}[${uid}]${result.message}`)
     }
 }
 
-async function ReadArts(uIdx,signIdx) {
+async function PkFightGame(userIdx,pk_uid) {
     let caller = printCaller()
+    let rndtimeInMs = Math.floor(new Date().getTime())
+    let rndtimeInS = Math.round(rndtimeInMs/1000)
     let userCk = userCookieArr[userIdx]
     let uid = userCk.match(/uid=(\w+)/)[1]
-    let sign = userReadList[userIdx][signIdx]
-    let url = `https://user.youth.cn/v1/article/detail.json?signature=${sign}&source=articleDetail&${userCk}&app_version=2.5.5&channel=c6001&device_model=OPPOR9tm&device_brand=OPPO&resolution=1080*1920&os_version=22&is_wxaccount=1&active_channel=c6001&access=wifi`
-    let urlObject = populateGetUrl(url)
-    await httpGet(urlObject,caller)
+    let body = `app_version=2.5.5&channel=c6001&${userCk}&device_model=OPPOR9tm&device_brand=OPPO&resolution=1080*1920&os_version=22&is_wxaccount=1&active_channel=c6001&access=wifi&v=${rndtime}&request_time=${rndtimeInS}&pk_uid=${pk_uid}`
+    let url = `https://user.youth.cn/FastApi/Activity/pkFightGame.json`
+    let urlObject = populatePostUrl(url,body)
+    await httpPost(urlObject,caller)
     let result = httpResult;
     if(!result) return
     
     if(result.error_code == 0) {
-        console.log(`用户${uIdx+1}[${uid}]开始看文章视频：${result.items.title}`)
+        if(result.items.pk_result==0) {
+            console.log(`用户${userIdx+1}[${uid}]与${pk_uid} PK失败，失去${result.items.score}青豆`)
+            await $.wait(500)
+            await InviteRewards(userIdx,pk_uid)
+        } else {
+            console.log(`用户${userIdx+1}[${uid}]与${pk_uid} PK胜利，获得${result.items.score}青豆`)
+        }
     } else {
-        console.log(`用户${uIdx+1}[${uid}]看文章视频失败：${result.message}`)
+        console.log(`用户${userIdx+1}[${uid}]${result.message}`)
     }
 }
 
-async function CompleteArts(uIdx,signIdx) {
+async function InviteRewards(userIdx,pk_uid) {
     let caller = printCaller()
-    let sign = userReadList[userIdx][signIdx]
+    let rndtimeInMs = Math.floor(new Date().getTime())
+    let rndtimeInS = Math.round(rndtimeInMs/1000)
     let userCk = userCookieArr[userIdx]
     let uid = userCk.match(/uid=(\w+)/)[1]
-    let url = `https://user.youth.cn/FastApi/article/complete.json?signature=${sign}`
-    let urlObject = populateGetUrl(url)
-    await httpGet(urlObject,caller)
+    let body = `app_version=2.5.5&channel=c6001&${userCk}&device_model=OPPOR9tm&device_brand=OPPO&resolution=1080*1920&os_version=22&is_wxaccount=1&active_channel=c6001&access=wifi&v=${rndtime}&request_time=${rndtimeInS}&pk_uid=${pk_uid}`
+    let url = `https://user.youth.cn/FastApi/Activity/inviteRewards.json`
+    let urlObject = populatePostUrl(url,body)
+    await httpPost(urlObject,caller)
     let result = httpResult;
     if(!result) return
     
     if(result.error_code == 0) {
-        console.log(`用户${uIdx+1}[${uid}]看文章视频获得${result.items.read_score}青豆`)
+        console.log(`用户${userIdx+1}[${uid}]免扣除${result.items.score}青豆`)
     } else {
-        console.log(`用户${uIdx+1}[${uid}]获得文章视频奖励失败：${result.message}`)
+        console.log(`用户${userIdx+1}[${uid}]${result.message}`)
+    }
+}
+
+async function GetRotaryInfo(userIdx) {
+    let caller = printCaller()
+    let rndtimeInMs = Math.floor(new Date().getTime())
+    let rndtimeInS = Math.round(rndtimeInMs/1000)
+    let userCk = userCookieArr[userIdx]
+    let uid = userCk.match(/uid=(\w+)/)[1]
+    let body = `${userCk}&app_version=2.5.5&channel=c6001&device_model=OPPOR9tm&device_brand=OPPO&resolution=1080*1920&os_version=22&is_wxaccount=1&active_channel=c6001&access=wifi&v=${rndtimeInMs}`
+    let url = `https://user.youth.cn/v1/RotaryTable/getData?_=${rndtimeInMs}`
+    let urlObject = populatePostUrl(url,body)
+    await httpPost(urlObject,caller)
+    let result = httpResult;
+    if(!result) return
+    
+    if(result.status == 1) {
+        turnNum[userIdx] = result.data.remainTurn
+        maxTurnNum = getMax(maxTurnNum,turnNum[userIdx])
+        let firstTimeStr = ''
+        let nextTimeStr = ''
+        if(result.data.first_score>0) firstTimeStr = `，首次进入抽奖页面获得${result.data.first_score}青豆，`
+        if(result.data.next_time>0) nextTimeStr = `，距离下一轮还有${result.data.next_time}秒`
+        console.log(`用户${userIdx+1}[${uid}]${firstTimeStr}本轮还剩${turnNum[userIdx]}次抽奖${nextTimeStr}`)
+    } else {
+        console.log(`用户${userIdx+1}[${uid}]${result.msg}`)
+    }
+}
+
+async function TurnRotary(userIdx) {
+    let caller = printCaller()
+    let rndtimeInMs = Math.floor(new Date().getTime())
+    let rndtimeInS = Math.round(rndtimeInMs/1000)
+    let userCk = userCookieArr[userIdx]
+    let uid = userCk.match(/uid=(\w+)/)[1]
+    let body = `${userCk}&app_version=2.5.5&channel=c6001&device_model=OPPOR9tm&device_brand=OPPO&resolution=1080*1920&os_version=22&is_wxaccount=1&active_channel=c6001&access=wifi&v=${rndtimeInMs}`
+    let url = `https://user.youth.cn/v1/RotaryTable/turnRotary?_=${rndtimeInMs}`
+    let urlObject = populatePostUrl(url,body)
+    await httpPost(urlObject,caller)
+    let result = httpResult;
+    if(!result) return
+    
+    if(result.status == 1) {
+        console.log(`用户${userIdx+1}[${uid}]抽奖获得${result.data.score}青豆，还剩${result.data.remainTurn}次抽奖`)
+    } else {
+        console.log(`用户${userIdx+1}[${uid}]${result.msg}`)
     }
 }
 ////////////////////////////////////////////////////////////////////

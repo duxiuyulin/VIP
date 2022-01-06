@@ -1,44 +1,38 @@
 /*
 安卓：中青看点极速版 （快应用，非IOS极速版，跟普通版青豆数据独立，普通版黑了也可以用）
-邀请链接：https://user.youth.cn/h5/fastAppWeb/invite/invite_ground.html?share_uid=1037638361&channel=c8000&nickname=%E6%AF%8D%E8%80%81%E8%99%8E%E5%A5%B6%E8%8C%B6&avatar=http%3A%2F%2Fres.youth.cn%2Favatar_202201_04_04r_61d4470b744c11037637302y.jpg&v=1641305085
+邀请链接：https://user.youth.cn/h5/fastAppWeb/invite/invite_ground.html?share_uid=1037637302&channel=c8000&nickname=%E5%B0%8F%E8%84%91%E6%96%A7%E8%9B%8B%E8%9B%8B&avatar=http%3A%2F%2Fres.youth.cn%2Favatar_202201_04_04q_61d41c92e21131037637302n.jpg&v=1641312406
 
 支持快应用的安卓手机才能玩
-别再问圈X了，改了改了改了，没有圈X，你要捉了包自己放到圈X跑也不是不行
 
-本脚本负责阅读文章，只需要ck即可
-定时自己看着改吧，我也不知道一天几次能跑满阅读收益，可能十来次吧
-25 8-22 * * *
+本脚本负责看看赚，目前有bug，只需要捉一个看看赚就可以刷满收益
+所以定时暂时一天一次就可
+35 10 * * *
 
 青龙：
-捉包找uid=xxxx&token=xxxxx&token_id=xxxxx，填到变量zqkdFastCookie里，多账号用@连接
+捉包找adlickstart的url，把body填到zqkdFastKkzBody里，多账号用@隔开
 
 V2P 重写：
 [rewrite_local]
-https://user.youth.cn/FastApi/NewTaskSimple/getTaskList  https://raw.githubusercontent.com/leafxcy/JavaScript/main/zqkdFast/zqkdFast_read.js
+https://user.youth.cn/v1/Nameless/adlickstart  https://raw.githubusercontent.com/leafxcy/JavaScript/main/zqkdFast/zqkdFast_kkz.js
 [MITM]
 user.youth.cn
 */
 
-const jsname = '中青极速版文章视频'
+const jsname = '中青极速版看看赚'
 const $ = Env(jsname)
 const logDebug = 0
 
-const updateStr = '2022.01.05 11:17 增加延迟'
+const updateStr = '2022.01.04 22:00 中青安卓极速版 看看赚 初版'
 
 let rndtime = "" //毫秒
 let httpResult //global buffer
 
-let userCookie = ($.isNode() ? process.env.zqkdFastCookie : $.getdata('zqkdFastCookie')) || '';
-let userCookieArr = []
+let userBody = ($.isNode() ? process.env.zqkdFastKkzBody : $.getdata('zqkdFastKkzBody')) || '';
+let userBodyArr = []
 
 let userIdx = 0
 let userCount = 0
-let userReadList = []
-
-let maxReadNum = 0
-
-let ART_ID = 0
-let VIDEO_ID = 1453
+let stopFlag = 0
 
 ///////////////////////////////////////////////////////////////////
 
@@ -51,25 +45,18 @@ let VIDEO_ID = 1453
         if(!(await checkEnv())) return
         
         for(userIdx=0; userIdx < userCount; userIdx++) {
-            await ListArts(userIdx,VIDEO_ID,ART_ID)
-            await ListArts(userIdx,ART_ID,VIDEO_ID)
-        }
-        
-        for(let i=0; i<maxReadNum; i++) {
-            console.log(`\n第${i+1}轮阅读`)
-            for(userIdx=0; userIdx < userCount; userIdx++) {
-                if(i<userReadList[userIdx].length) {
-                    ReadArts(userIdx,i)
-                    await $.wait(200)
-                }
+            console.log('======================')
+            await adlickstart(userIdx)
+            await $.wait(500)
+            for(let i=0; i<6; i++) {
+                await bannerstatus(userIdx)
+                await $.wait(500)
             }
-            for(userIdx=0; userIdx < userCount; userIdx++) {
-                if(i<userReadList[userIdx].length) {
-                    CompleteArts(userIdx,i)
-                    await $.wait(200)
-                }
+            stopFlag = 0
+            while(stopFlag==0) {
+                await adlickend(userIdx)
+                await $.wait(2000)
             }
-            await $.wait(Math.floor(Math.random()*30000) + 5000)
         }
     }
 })()
@@ -78,102 +65,104 @@ let VIDEO_ID = 1453
 
 ///////////////////////////////////////////////////////////////////
 async function checkEnv() {
-    if(userCookie) {
-        userCookieArr = userCookie.split('@')
-        userCount = userCookieArr.length
+    if(userBody) {
+        userBodyArr = userBody.split('@')
+        userCount = userBodyArr.length
     } else {
-        console.log('未找到zqkdFastCookie')
+        console.log('未找到zqkdFastKkzBody')
         return false
     }
     
-    for(let idx in userCookieArr) userReadList.push([])
-    
-    console.log(`共找到${userCount}个CK`)
+    console.log(`共找到${userCount}个看看赚账户`)
     return true
 }
 
 async function GetRewrite() {
-    if($request.url.indexOf('FastApi/NewTaskSimple/getTaskList') > -1) {
-        console.log($request.url)
-        let uid = $request.url.match(/uid=(\w+)/)[1]
-        let token = $request.url.match(/token=([\w\%]+)/)[1]
-        let token_id = $request.url.match(/token_id=(\w+)/)[1]
-        let ck = `uid=${uid}&token=${token}&token_id=${token_id}`
+    if($request.url.indexOf('Nameless') > -1 && $request.url.indexOf('adlickstart') > -1) {
+        let body = $request.body
+        let uid = body.match(/uid=(\w+)/)[1]
         let uidStr = 'uid='+uid
         
-        if(userCookie) {
-            if(userCookie.indexOf(uidStr) == -1) {
-                userCookie = userCookie + '@' + ck
-                $.setdata(userCookie, 'zqkdFastCookie');
-                ckList = userCookie.split('@')
-                $.msg(jsname+` 获取第${ckList.length}个zqkdFastCookie成功: ${ck}`)
+        if(userBody) {
+            if(userBody.indexOf(uidStr) == -1) {
+                userBody = userBody + '@' + body
+                $.setdata(userBody, 'zqkdFastKkzBody');
+                ckList = userBody.split('@')
+                $.msg(jsname+` 获取第${ckList.length}个zqkdFastKkzBody成功: ${body}`)
             } else {
-                console.log(jsname+` 找到重复的cookie: ${ck}`)
+                userBodyArr = userBody.split('@')
+                for(let i=0; i<userBodyArr.length; i++) {
+                    if(userBodyArr[i].indexOf(uidStr) > -1) {
+                        userBodyArr[i] = body
+                        break;
+                    }
+                }
+                userBody = userBodyArr.join('@')
+                $.setdata(userBody, 'zqkdFastKkzBody');
+                $.msg(jsname+` 找到重复的用户body: ${body}，将替换旧body`)
             }
         } else {
-            $.setdata(ck, 'zqkdFastCookie');
-            $.msg(jsname+` 获取第1个zqkdFastCookie成功: ${ck}`)
+            $.setdata(body, 'zqkdFastKkzBody');
+            $.msg(jsname+` 获取第1个zqkdFastKkzBody成功: ${body}`)
         }
     }
 }
 ///////////////////////////////////////////////////////////////////
-async function ListArts(userIdx,cid,vid) {
+async function adlickstart(idx) {
     let caller = printCaller()
-    let userCk = userCookieArr[userIdx]
-    let uid = userCk.match(/uid=(\w+)/)[1]
-    let url = `https://user.youth.cn/FastApi/article/lists.json?catid=${cid}&video_catid=${vid}&op=0&behot_time=0&&app_version=2.5.5&${userCk}`
-    let urlObject = populateGetUrl(url)
-    await httpGet(urlObject,caller)
+    let body = userBodyArr[userIdx]
+    let uid = body.match(/uid=(\w+)/)[1]
+    let url = 'https://user.youth.cn/v1/Nameless/adlickstart.json'
+    let urlObject = populatePostUrl(url,body)
+    await httpPost(urlObject,caller)
     let result = httpResult;
     if(!result) return
     
-    let typeStr = (cid==1453) ? '视频' : '文章'
     if(result.error_code == 0) {
-        for(let item of result.items) {
-            userReadList[userIdx].push(item.signature)
+        console.log(`用户${idx+1}[${uid}]开始看看赚任务[${result.items.banner_id}]`)
+    } else {
+        console.log(`用户${idx+1}[${uid}]开始看看赚任务失败：${result.message}`)
+    }
+}
+
+async function bannerstatus(idx) {
+    let caller = printCaller()
+    let body = userBodyArr[userIdx]
+    let uid = body.match(/uid=(\w+)/)[1]
+    let url = 'https://user.youth.cn/v1/Nameless/bannerstatus.json'
+    let urlObject = populatePostUrl(url,body)
+    await httpPost(urlObject,caller)
+    let result = httpResult;
+    if(!result) return
+    
+    if(result.error_code == 0) {
+        console.log(`用户${idx+1}[${uid}]阅读看看赚文章中[${result.items.banner_id}]`)
+    } else {
+        console.log(`用户${idx+1}[${uid}]阅读看看赚文章失败：${result.message}`)
+    }
+}
+
+async function adlickend(idx) {
+    let caller = printCaller()
+    let body = userBodyArr[userIdx]
+    let uid = body.match(/uid=(\w+)/)[1]
+    let url = 'https://user.youth.cn/v1/Nameless/adlickend.json'
+    let urlObject = populatePostUrl(url,body)
+    await httpPost(urlObject,caller)
+    let result = httpResult;
+    if(!result) return
+    
+    if(result.error_code == 0) {
+        console.log(`用户${idx+1}[${uid}]获得${result.items.score}青豆`)
+        if(result.items.score==0) {
+            stopFlag = 1
         }
-        maxReadNum = getMax(maxReadNum,userReadList[userIdx].length)
-        console.log(`用户${userIdx+1}[${uid}]找到${result.items.length}${typeStr}`)
     } else {
-        console.log(`用户${userIdx+1}[${uid}]获取${typeStr}列表失败：${result.message}`)
+        console.log(`用户${idx+1}[${uid}]完成看看赚任务失败：${result.message}`)
+        stopFlag = 1
     }
 }
 
-async function ReadArts(uIdx,signIdx) {
-    let caller = printCaller()
-    let userCk = userCookieArr[userIdx]
-    let uid = userCk.match(/uid=(\w+)/)[1]
-    let sign = userReadList[userIdx][signIdx]
-    let url = `https://user.youth.cn/v1/article/detail.json?signature=${sign}&source=articleDetail&${userCk}&app_version=2.5.5&channel=c6001&device_model=OPPOR9tm&device_brand=OPPO&resolution=1080*1920&os_version=22&is_wxaccount=1&active_channel=c6001&access=wifi`
-    let urlObject = populateGetUrl(url)
-    await httpGet(urlObject,caller)
-    let result = httpResult;
-    if(!result) return
-    
-    if(result.error_code == 0) {
-        console.log(`用户${uIdx+1}[${uid}]开始看文章视频：${result.items.title}`)
-    } else {
-        console.log(`用户${uIdx+1}[${uid}]看文章视频失败：${result.message}`)
-    }
-}
-
-async function CompleteArts(uIdx,signIdx) {
-    let caller = printCaller()
-    let sign = userReadList[userIdx][signIdx]
-    let userCk = userCookieArr[userIdx]
-    let uid = userCk.match(/uid=(\w+)/)[1]
-    let url = `https://user.youth.cn/FastApi/article/complete.json?signature=${sign}`
-    let urlObject = populateGetUrl(url)
-    await httpGet(urlObject,caller)
-    let result = httpResult;
-    if(!result) return
-    
-    if(result.error_code == 0) {
-        console.log(`用户${uIdx+1}[${uid}]看文章视频获得${result.items.read_score}青豆`)
-    } else {
-        console.log(`用户${uIdx+1}[${uid}]获得文章视频奖励失败：${result.message}`)
-    }
-}
 ////////////////////////////////////////////////////////////////////
 function populatePostUrl(url,reqBody){
     let urlObject = {
