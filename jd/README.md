@@ -1,5 +1,5 @@
 # 使用教程
-
+无法拉库，请单拉脚本！！！
 * > 【青龙】国外拉取仓库命令：`ql repo https://github.com/duxiuyulin/jdscripts.git "jd_|jx_|getJDCookie"  "backup|kd|other|ql|wool|backUp" "^jd[^_]|USER|sendNotify|ql|sign_graphics_validate|JDJR|JDSign" "main"`
 * > 【青龙】国内拉取仓库命令：`ql repo https://ghproxy.com/https://github.com/duxiuyulin/jdscripts.git "jd_|jx_|getJDCookie"  "backup|kd|other|ql|wool|backUp" "^jd[^_]|USER|sendNotify|ql|sign_graphics_validate|JDJR|JDSign" "main"`
 
