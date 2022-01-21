@@ -1,25 +1,21 @@
 /*
 https://lzkj-isv.isvjcloud.com/wxgame/activity/8530275?activityId=
-
-TG https://t.me/duckjobs
-
-不能并发
-
-JD_CART_REMOVESIZE || 20; // 运行一次取消多全部已关注的商品。数字0表示不取关任何商品
-JD_CART_REMOVEALL || true;    //是否清空，如果为false，则上面设置了多少就只删除多少条
-7 7 7 7 * jd_wxCollectionActivity.js
 */
 const $ = new Env('加购物车抽奖');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 const notify = $.isNode() ? require('./sendNotify') : '';
-let cookiesArr = [], cookie = '', message = '' ;
-let activityIdList = []
+let cookiesArr = [], cookie = '', message = '';
+let activityIdList = ["e7e23c6cae7d4669af8a8776cc8baf9e"]
 let lz_cookie = {}
 
-if (process.env.DDO && process.env.DDO != "") {
-    activityId = process.env.DDO.split('\n');
+if (process.env.ACTIVITY_ID && process.env.ACTIVITY_ID != "") {
+    activityId = process.env.ACTIVITY_ID;
 }
-
+/*可以自定义FDD变量，不用在脚本加了
+if (process.env.FDD && process.env.FDD != "") {
+    activityIdList = process.env.FDD.split(',');
+}
+*/
 if ($.isNode()) {
     Object.keys(jdCookieNode).forEach((item) => {
         cookiesArr.push(jdCookieNode[item])
@@ -34,7 +30,6 @@ if ($.isNode()) {
     cookiesArr.reverse();
     cookiesArr = cookiesArr.filter(item => !!item);
 }
-let doPush = process.env.DoPush || false; // 设置为 false 每次推送, true 跑完了推送
 let removeSize = process.env.JD_CART_REMOVESIZE || 20; // 运行一次取消多全部已关注的商品。数字0表示不取关任何商品
 let isRemoveAll = process.env.JD_CART_REMOVEALL || true;    //是否清空，如果为false，则上面设置了多少就只删除多少条
 $.keywords = process.env.JD_CART_KEYWORDS || []
@@ -84,9 +79,9 @@ $.keywordsNum = 0;
                 } else if($.getPrize != null && !$.getPrize.includes("京豆")){
                     break
                 }
-                await $.wait(2000)
+                await $.wait(3000)
                 await requireConfig();
-                do {
+                /*do {
                     await getCart_xh();
                     $.keywordsNum = 0
                     if($.beforeRemove !== "0"){
@@ -98,6 +93,7 @@ $.keywordsNum = 0;
                         }
                     } else break;
                 } while(isRemoveAll && $.keywordsNum !== $.beforeRemove)
+                */
                 if ($.bean > 0) {
                     message += `\n【京东账号${$.index}】${$.nickName || $.UserName} \n       └ 获得 ${$.bean} 京豆。`
                 }
@@ -137,11 +133,11 @@ async function addCart() {
             if ($.activityContent.drawInfo.name.includes("京豆")) {
                 $.log("-> 加入购物车")
                 for(let i in $.activityContent.cpvos){
-                    await $.wait(1000)
+                    await $.wait(3000)
                     await task('addCart', `activityId=${$.activityId}&pin=${encodeURIComponent($.secretPin)}&productId=${$.activityContent.cpvos[i].skuId}`)
                 }
                 $.log("-> 抽奖")
-                await $.wait(1000)
+                await $.wait(3000)
                 await task('getPrize', `activityId=${$.activityId}&pin=${encodeURIComponent($.secretPin)}`)
             } else {
                 $.log("未能成功获取到活动信息")
@@ -190,13 +186,7 @@ function task(function_id, body, isCommon = 0) {
                                 case 'getPrize':
                                     console.log(data.data.name)
                                     $.getPrize = data.data.name;
-                                    if (doPush === true) {
-                                        if (data.data.name) {
-                                            message += data.data.name + " "
-                                        }
-                                    } else {
-                                        // await notify.sendNotify($.name, data.data.name, '', `\n`);
-                                    }
+                                    await notify.sendNotify($.name, data.data.name, '', `\n`);
                                     break
                                 default:
                                     $.log(JSON.stringify(data))
@@ -204,7 +194,7 @@ function task(function_id, body, isCommon = 0) {
                             }
                         }
                     } else {
-                        // $.log("京东没有返回数据")
+                        $.log("京东没有返回数据")
                     }
                 }
             } catch (error) {
@@ -359,10 +349,6 @@ function random(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 
 }
-function strToJson(str){
-	var json = eval('(' + str + ')');
-	return json;
-}
 function requireConfig(){
     return new Promise(resolve => {
         if($.isNode() && process.env.JD_CART){
@@ -385,7 +371,7 @@ function getCart_xh(){
         }
         $.get(option, async(err, resp, data) => {
             try{
-                data = strToJson(getSubstr(data, "window.cartData = ", "window._PFM_TIMING"));
+                data = JSON.parse(getSubstr(data, "window.cartData = ", "window._PFM_TIMING"));
                 $.areaId = data.areaId;   // locationId的传值
                 $.traceId = data.traceId; // traceid的传值
                 venderCart = data.cart.venderCart;
