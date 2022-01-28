@@ -17,18 +17,18 @@ sudo docker pull rubyangxg/jd-qinglong
 ```
 4. 启动，其中env.properties中的SE_NODE_MAX_SESSIONS=8请根据机器配置改，机器要求最少1h2g，推荐2h4g **_注意这是1条命令，全部复制执行_**
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
+sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true --restart always -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
 ```
 或者
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true --restart always \
+sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true --restart always \
 -v [你的路径]/env.properties:/env.properties:rw \
 -v [你的路径]/adbot:/adbot \
 rubyangxg/jd-qinglong
 ```
 arm的启动有所不同，请仔细甄别
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true --restart always \
+sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true --restart always \
 -e "SPRING_PROFILES_ACTIVE=arm" \
 -v [你的路径]/env.properties:/env.properties:rw \
 -v [你的路径]/adbot:/adbot \
@@ -36,7 +36,7 @@ rubyangxg/jd-qinglong:arm
 ```
 例子：**_注意这是1条命令，全部复制执行，注意\后面不要有空格_**，
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true --restart always \
+sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true --restart always \
 -v "$(pwd)"/env.properties:/env.properties:rw \
 -v "$(pwd)"/adbot:/adbot \
 rubyangxg/jd-qinglong
@@ -48,7 +48,7 @@ services:
     jd-qinglong:
         ports:
             - 5701:8080
-            - 8100:8100
+            - 9527:8090
         container_name: jd-login
         privileged: true
         volumes:
@@ -73,6 +73,6 @@ docker-compose up -d
 ```
 cd jd-qinglong
 docker rm -f webapp && docker rmi rubyangxg/jd-qinglong && docker pull rubyangxg/jd-qinglong
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
+sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
 ```
 **上面两条命令执行完毕后，重新运行启动命令(安装教程第4步)**
