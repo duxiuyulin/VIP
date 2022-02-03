@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Build 20211217-001-test
+## Build 20220116-001-test
 
 ## 导入通用变量与函数
 #dir_shell=/ql/shell
@@ -87,11 +87,6 @@ BreakHelpNum="4 9-14 15~18 19_21" ## 屏蔽账号序号或序号区间
 ## 定义是否自动更新配置文件中的互助码和互助规则
 ## 默认为 UpdateType="1" 表示更新互助码和互助规则；UpdateType="2" 表示只更新互助码，不更新互助规则；UpdateType="3" 表示只更新互助规则，不更新互助码；留空或其他数值表示不更新。
 UpdateType="1"
-
-## 定义是否自动安装或修复缺失的依赖，默认为1，表示自动修复；留空或其他数值表示不修复。
-FixDependType=""
-## 定义监控修复的依赖名称
-package_name="canvas png-js date-fns axios crypto-js ts-md5 tslib @types/node dotenv got md5 requests typescript fs require jsdom download js-base64 tough-cookie tunnel ws jieba prettytable form-data json5 global-agent"
 
 ## 需组合的环境变量列表，env_name需要和var_name一一对应，如何有新活动按照格式添加(不懂勿动)
 env_name=(
@@ -194,16 +189,39 @@ name_chinese=(
     京喜token
 )
 
+# 定义 json 数据查询工具
+def_envs_tool() {
+    for i in $@; do
+        curl -s --noproxy "*" "http://0.0.0.0:5600/api/envs?searchValue=$i" -H "Authorization: Bearer $token" | jq .data | perl -pe "{s|^\[\|\]$||g; s|\n||g; s|\},$|\}\n|g}"
+    done
+}
+
+def_json_total() {
+    def_envs_tool $1 | jq -r .$2
+}
+
+def_json() {
+    def_envs_tool $1 | grep "$3" | jq -r .$2
+}
+
+def_json_value() {
+    cat "$1" | perl -pe "{s|^\[\|\]$||g; s|\n||g; s|\},$|\}\n|g}" | grep "$3" | jq -r .$2
+}
+
+def_sub() {
+    local i j
+    for i in $(def_json_total $1 $2 | awk '/'$3'/{print NR}'); do
+        j=$((i - 1))
+        echo $j
+    done
+}
+
 ## 生成pt_pin清单
 gen_pt_pin_array() {
     local envs=$(eval echo "\$JD_COOKIE")
     local array=($(echo $envs | sed 's/&/ /g'))
     local tmp1 tmp2 i pt_pin_temp
-    for i in "${!array[@]}"; do
-        pt_pin_temp=$(echo ${array[i]} | perl -pe "{s|.*pt_pin=([^; ]+)(?=;?).*|\1|; s|%|\\\x|g}")
-        remark_name[i]=$(cat $dir_db/env.db | grep ${array[i]} | grep remarks | perl -pe "{s|.*remarks\":\"([^\"]+).*|\1|g}" | tail -1)
-        [[ $pt_pin_temp == *\\x* ]] && pt_pin[i]=$(printf $pt_pin_temp) || pt_pin[i]=$pt_pin_temp
-    done
+    pt_pin=($(eval echo "\$JD_COOKIE" | perl -pe "{s|&|\n|g; s|.*pt_pin=([^; ]+)(?=;?).*|\1|g}" | awk 'BEGIN{for(i=0;i<10;i++)hex[i]=i;hex["A"]=hex["a"]=10;hex["B"]=hex["b"]=11;hex["C"]=hex["c"]=12;hex["D"]=hex["d"]=13;hex["E"]=hex["e"]=14;hex["F"]=hex["f"]=15;}{gsub(/\+/," ");i=$0;while(match(i,/%../)){;if(RSTART>1);printf"%s",substr(i,1,RSTART-1);printf"%c",hex[substr(i,RSTART+1,1)]*16+hex[substr(i,RSTART+2,1)];i=substr(i,RSTART+RLENGTH);}print i;}'))
 }
 
 ## 导出互助码的通用程序，$1：去掉后缀的脚本名称，$2：config.sh中的后缀，$3：活动中文名称
@@ -651,9 +669,17 @@ dump_user_info() {
     echo -e "\n## 账号用户名及 COOKIES 整理如下："
     local envs=$(eval echo "\$JD_COOKIE")
     local array=($(echo $envs | sed 's/&/ /g'))
-    for ((m = 0; m < ${#pt_pin[*]}; m++)); do
-        j=$((m + 1))
-        echo -e "## 用户名 $j：${pt_pin[m]} 备注：${remark_name[m]} $(check_jd_cookie ${array[m]})\nCookie$j=\"${array[m]}\""
+    for ((i = 0; i < ${#pt_pin[*]}; i++)); do
+        remarks[i]="$(def_json JD_COOKIE remarks "pin=${pin[i]};" | head -1)"
+        if [[ ${remarks[i]} == *@@* ]]; then
+            remarks_name[i]="($(echo ${remarks[i]} | awk -F '@@' '{print $1}'))"
+        elif [[ ${remarks[i]} && ${remarks[i]} != null ]]; then
+            remarks_name[i]="(${remarks[i]})"
+        else
+            remarks_name[i]="(未备注)"
+        fi
+        j=$((i + 1))
+        echo -e "## 用户名 $j：${pt_pin[i]} 备注：${remark_name[i]} $(check_jd_cookie ${array[i]})\nCookie$j=\"${array[i]}\""
     done
 }
 
@@ -681,145 +707,12 @@ backup_del() {
     fi
 }
 
-#检查 node 依赖状态并修复
-install_node_dependencies_all() {
-    node_dependencies_ori_status() {
-        if [[ -n $(echo $(cnpm ls $1) | grep ERR) ]]; then
-            return 1
-        elif [[ -n $(echo $(cnpm ls $1 -g) | grep ERR) ]]; then
-            return 2
-        elif [[ $(cnpm ls $1) =~ $1 ]]; then
-            return 3
-        elif [[ $(cnpm ls $1 -g) =~ $1 ]]; then
-            return 4
-        fi
-    }
-
-    test() {
-        for i in $@; do
-            node_dependencies_ori_status
-            echo -e "$i : $?"
-        done
-    }
-
-    install_node_dependencie() {
-        #        node_dependencies_ori_status $1
-        #        if [[ $? = 1 || $? = 2 ]]; then
-        #            cnpm uninstall $1
-        #        elif [[ $? = 3 ]]; then
-        #            cnpm uninstall $1 -g
-        #        fi
-        #
-        #        node_dependencies_ori_status $1
-        #        if [[ $? = 4 ]]; then
-        #            if [[ $1 = "canvas" ]]; then
-        #                apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev && cnpm install $1 -g
-        #            else
-        #                cnpm install $1 -g --force
-        #            fi
-        #        fi
-
-        node_dependencies_ori_status $1
-        if [[ $? = 1 ]]; then
-            [[ $1 = "canvas" ]] && {
-                cnpm uninstall $1
-                rm -rf /ql/scripts/node_modules/canvas
-                rm -rf /usr/local/lib/node_modules/lodash/canvas
-            } || cnpm uninstall $1
-        elif [ $? = 2 ]; then
-            [[ $1 = "canvas" ]] && {
-                cnpm uninstall $1 -g
-                rm -rf /usr/local/lib/node_modules/canvas
-            } || cnpm uninstall $1 -g
-        fi
-
-        node_dependencies_ori_status $1
-        if [[ $? != 3 && $? != 4 ]]; then
-            [[ $1 = "canvas" ]] && {
-                apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev
-                cnpm install $1 -g --force
-            } || cnpm install $1 -g --force
-        fi
-    }
-
-    uninstall_dependencies() {
-        for i in $package_name; do
-            cnpm uninstall $i
-            cnpm uninstall i $i
-            cnpm uninstall $i -g
-            cnpm uninstall i $i -g
-        done
-    }
-
-    check_node_dependencies_setup_status() {
-        for i in $package_name; do
-            cnpm ls $i -g
-        done
-    }
-
-    cnpm install -g cnpm
-    [[ $(npm ls cnpm -g) =~ (empty) ]] && npm install cnpm -g
-    for i in $package_name; do
-        install_node_dependencie $i
-    done
-    #cnpm update --force
-    #cnpm i --legacy-peer-deps
-    #cnpm i --package-lock-only
-    #cnpm audit fix
-    #cnpm audit fix --force
-}
-
 kill_proc() {
     ps -ef | grep "$1" | grep -Ev "$2" | awk '{print $1}' | xargs kill -9
 }
 
-batch_deps_scripts() {
-    switch_status=(
-        on
-        on
-        on
-    )
-
-    scripts_name=(
-        ql.js
-        sendNotify.js
-        JD_DailyBonus.js
-    )
-
-    test_connect() {
-        curl -o /dev/null -s -w %{http_code} $1
-    }
-
-    get_remote_filesize() {
-        curl -sI $1 | grep -i Content-Length | awk '{print $2}'
-    }
-
-    get_local_filesize() {
-        stat -c %s $1
-    }
-
-    scripts_source=(
-        https://cdn.jsdelivr.net/gh/ccwav/QLScript2@main/ql.js
-        https://cdn.jsdelivr.net/gh/ccwav/QLScript2@main/sendNotify.js
-        https://cdn.jsdelivr.net/gh/NobyDa/Script@master/JD-DailyBonus/JD_DailyBonus.js
-    )
-
-    download_scripts() {
-        if [[ "$(test_connect $1)" -eq "200" ]]; then
-            curl -C - -s --connect-timeout 5 --retry 3 --noproxy "*" $1 -o $dir_config/tmp_$2
-            [[ $(get_remote_filesize $1) -eq $(get_local_filesize $dir_config/tmp_$2) ]] && mv -f $dir_config/tmp_$2 $dir_config/$2 || rm -rf $dir_config/tmp_$2
-        fi
-    }
-
-    for ((i = 0; i < ${#scripts_source[*]}; i++)); do
-        { if [[ ${switch_status[i]} = "on" ]]; then download_scripts ${scripts_source[i]} ${scripts_name[i]}; fi; } &
-    done
-}
-
 ## 执行并写入日志
 kill_proc "code.sh" "grep|$$" >/dev/null 2>&1
-batch_deps_scripts &
-[[ $FixDependType = "1" ]] && [[ "$ps_num" -le $proc_num ]] && install_node_dependencies_all >/dev/null 2>&1 &
 latest_log=$(ls -r $dir_code | head -1)
 latest_log_path="$dir_code/$latest_log"
 ps_num="$(ps | grep code.sh | grep -v grep | wc -l)"
