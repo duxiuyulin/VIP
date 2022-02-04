@@ -118,4 +118,13 @@ jobs:
           source_repo: "https://github.com/yqchilde/JDMemberCloseAccount.git" # 退会
           source_branch: "main" 
           destination_branch: "JDMemberCloseAccount" # 按照自己仓库分支名称修改
-          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}        
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}      
+                                        
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/leecobaby/shortcuts.git" # ios捷径
+          source_branch: "master" 
+          destination_branch: "shortcuts" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}    
