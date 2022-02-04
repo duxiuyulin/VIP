@@ -1,5 +1,4 @@
 # File: .github/workflows/VIP.yml
-#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
 name: VIP
 on: 
   schedule: 
