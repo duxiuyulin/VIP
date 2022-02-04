@@ -22,7 +22,8 @@ repo3='he1pu_JDHelp'                               #预设的 he1pu 仓库
 repo4='shufflewzc_faker2'                          #预设的 shufflewzc 仓库
 repo5='Wenmoux_scripts_wen_chinnkarahoi'           #预设的 Wenmoux 仓库，用于读取口袋书店互助码。需提前拉取温某人的仓库或口袋书店脚本并完整运行。
 repo6='Aaron-lv_sync_jd_scripts'                   #预设的 Aaron-lv 仓库
-repo7='smiek2221_scripts'                          #预设的 smiek2221 仓库
+repo7='smiek2221_scripts'                          #预设的 okyyds 仓库
+repoA='YYDS_master_jd_scripts'
 repo=""                                            #空值，表示遍历所有仓库脚本日志
 
 ## 调试模式开关，默认是0，表示关闭；设置为1，表示开启
