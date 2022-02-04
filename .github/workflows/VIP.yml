@@ -1,4 +1,5 @@
-# File: .github/workflows/repo-sync.yml
+# File: .github/workflows/VIP.yml
+#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
 name: VIP
 on: 
   schedule: 
@@ -19,7 +20,7 @@ jobs:
         with: 
           persist-credentials: false 
            
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -28,7 +29,7 @@ jobs:
           destination_branch: "Oreomeow" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}
               
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -37,7 +38,7 @@ jobs:
           destination_branch: "Mashiro2000" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
           
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -46,7 +47,7 @@ jobs:
           destination_branch: "leafxcy" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}  
                
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -55,7 +56,7 @@ jobs:
           destination_branch: "checkbox" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
                 
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -65,7 +66,7 @@ jobs:
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}       
      
           
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -74,7 +75,7 @@ jobs:
           destination_branch: "MTG" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
           
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -83,7 +84,7 @@ jobs:
           destination_branch: "jd-qinglong" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}
           
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -92,7 +93,7 @@ jobs:
           destination_branch: "sillyGirl" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
           
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -101,7 +102,7 @@ jobs:
           destination_branch: "xdd-plus" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
                     
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
@@ -110,7 +111,7 @@ jobs:
           destination_branch: "mini" # 按照自己仓库分支名称修改
           github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}     
                               
-      - name: Repo Sync
+      - name: VIP
         uses: repo-sync/github-sync@v2 
         if: env.PAT 
         with: 
