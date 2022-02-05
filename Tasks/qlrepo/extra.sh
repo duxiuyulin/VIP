@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-## Mod: Build2021207V1
+## Mod: Build20220205V1
 ## 添加你需要重启自动执行的任意命令，比如 ql repo
 ## 安装node依赖使用 pnpm install -g xxx xxx（Build 20210728-002 及以上版本的 code.sh，可忽略）
 ## 安装python依赖使用 pip3 install xxx（Build2021125V1 及以上版本的 extra.sh，可忽略）
@@ -19,9 +19,9 @@
 #------ 设置区 ------#
 # shellcheck disable=SC2005
 ## 1. 拉取仓库或脚本编号设置，默认 shufflewzc 仓库
-CollectedRepo=(4) ##示例：CollectedRepo=(2 4 6)
-OtherRepo=()      ##示例：OtherRepo=(1 3 0)
-RawScript=(1 2)   ##示例：RawScript=(1 2)
+CollectedRepo=() ##示例：CollectedRepo=(2 6)
+OtherRepo=()     ##示例：OtherRepo=(1 3 0)
+RawScript=()     ##示例：RawScript=(1 2)
 ## 2. 是否安装依赖和安装依赖包的名称设置
 dependencies="al py pl" ##yes为全部安装，no为不安装，al为安装alpine依赖，py为安装python依赖，js为安装nodejs依赖，pl为安装perl依赖
 alpine_pkgs="bash curl gcc git jq libffi-dev make musl-dev openssl-dev perl perl-app-cpanminus perl-dev py3-pip python3 python3-dev wget"
@@ -36,9 +36,11 @@ Ninja="on" ##up为更新，on为启动，down为不运行
 一、集成仓库（Collected Repositories)
 2-JDHelloWorld
 3-he1pu
-4-shufflewzc/faker2
 6-Aaron-lv
-8-shufflewzc/faker3
+9-zero205
+10-yyds
+11-KingRan
+12-gys619
 二、其他仓库（Other Repositories）
 1-passerby-b
 2-curtinlv
@@ -57,6 +59,8 @@ Ninja="on" ##up为更新，on为启动，down为不运行
 三、单拉脚本（Raw Scripts）
 1-禁用重复任务 by Oreomeow
 2-修复脚本依赖文件 by spiritLHL
+3-互助研究院 extra2.sh
+4-互助研究院 ckck2.sh
 EOF
 
 #------ 代码区 ------#
@@ -67,14 +71,20 @@ CR2() {
 CR3() {
     ql repo https://github.com/he1pu/JDHelp.git "jd_|jx_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|utils|sendNotify|ZooFaker|JDJRValidator_|^sign"
 }
-CR4() {
-    ql repo https://github.com/shufflewzc/faker2.git "jd_|jx_|gua_|jddj_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|sendNotify|function|utils|JDJRValidator_|ZooFaker|^sign"
-}
 CR6() {
     ql repo https://github.com/Aaron-lv/sync.git "jd_|jx_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|utils|sendNotify|JD_" "jd_scripts"
 }
-CR8() {
-    ql repo https://github.com/shufflewzc/faker3.git "jd_|jx_|gua_|jddj_|getJDCookie" "activity|backUp|Coupon" "^jd[^_]|USER|sendNotify|function|utils|JDJRValidator_|ZooFaker|^sign"
+CR9() {
+    ql repo https://github.com/zero205/JD_tencent_scf.git "jd_|jx_|getJDCookie" "backUp|icon" "^jd[^_]|USER|sendNotify|sign_graphics_validate|JDJR|JDSign" "main"
+}
+CR10() {
+    ql repo https://github.com/okyyds/yyds.git "jd_|jx_|gua_|jddj_|jdCookie" "activity|backUp" "^jd[^_]|USER|function|utils|sendNotify|ZooFaker_Necklace.js|JDJRValidator_|sign_graphics_validate|ql|JDSignValidator" "master"
+}
+CR11() {
+    ql repo https://ghproxy.com/github.com/KingRan/JDJB.git "jd_|jx_|jdCookie" "activity|backUp" "^jd[^_]|USER|utils|function|sign|sendNotify|ql|JDJR"
+}
+CR12() {
+    ql repo https://github.com/gys619/jdd.git "jd_|jx_|jddj_|gua_|jddj_|getJDCookie|wskey" "activity|backUp" "^jd[^_]|USER|utils|ZooFaker_Necklace|JDJRValidator_Pure|sign_graphics_validate|jddj_cookie|function|ql"
 }
 for i in "${CollectedRepo[@]}"; do
     CR"$i"
@@ -133,6 +143,12 @@ RS1() {
 }
 RS2() {
     ql raw https://raw.githubusercontent.com/spiritLHL/qinglong_auto_tools/master/scripts_check_dependence.py
+}
+RS3() {
+    ql raw https://raw.githubusercontent.com/Oreomeow/VIP/main/Scripts/sh/Helpcode2.8/extra2.sh
+}
+RS4() {
+    ql raw https://raw.githubusercontent.com/Oreomeow/VIP/main/Scripts/sh/Helpcode2.8/ckck2.sh
 }
 for i in "${RawScript[@]}"; do
     RS"$i"

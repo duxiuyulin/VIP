@@ -65,9 +65,9 @@ update_config() {
 update_extra() {
     curl -sL https://raw.githubusercontent.com/Oreomeow/VIP/main/Tasks/qlrepo/extra.sh >"$file_raw_extra"
     mv -b "$file_raw_extra" "$dir_config"
-    sed -i "s/CollectedRepo=(4)/CollectedRepo=(${CollectedRepo})/" "$file_config_extra"
+    sed -i "s/CollectedRepo=()/CollectedRepo=(${CollectedRepo})/" "$file_config_extra"
     sed -i "s/OtherRepo=()/OtherRepo=(${OtherRepo})/" "$file_config_extra"
-    sed -i "s/RawScript=(1 2)/RawScript=(${RawScript})/" "$file_config_extra"
+    sed -i "s/RawScript=()/RawScript=(${RawScript})/" "$file_config_extra"
     sed -i "s/Ninja=\"on\"/Ninja=\"${Ninja}\"/" "$file_config_extra"
     echo 'bash /ql/config/Update.sh' >>"$file_config_extra"
 }
