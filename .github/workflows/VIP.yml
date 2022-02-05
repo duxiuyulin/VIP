@@ -1,0 +1,138 @@
+# File: .github/workflows/VIP.yml
+name: VIP
+on: 
+  schedule: 
+  - cron: '22 2 */3 * *' #此处为同步运行时间
+  workflow_dispatch: 
+  watch: 
+   types: started 
+  repository_dispatch:
+    types: VIP
+jobs: 
+ repo-sync: 
+     env: 
+       PAT: ${{ github.event.client_payload.PAT || secrets.PAT }} #此处PAT需要申请
+     runs-on: ubuntu-latest 
+     if: github.event.repository.owner.id == github.event.sender.id 
+     steps: 
+      - uses: actions/checkout@v2 
+        with: 
+          persist-credentials: false 
+           
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/Oreomeow/VIP.git" # 猫一键
+          source_branch: "main" 
+          destination_branch: "Oreomeow" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}
+                     
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/okyyds/onekey.git" # ddo一键
+          source_branch: "main" 
+          destination_branch: "DDO" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}
+              
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/Mashiro2000/HeyTapTask.git" # OPPO商城
+          source_branch: "main" 
+          destination_branch: "Mashiro2000" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
+          
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/leafxcy/JavaScript.git" # leafxcy脚本
+          source_branch: "main" 
+          destination_branch: "leafxcy" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}  
+               
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/Wenmoux/checkbox.git" # 温某签到盒
+          source_branch: "master" 
+          destination_branch: "checkbox" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
+                
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/chiupam/JD_Diy.git" # 机器人
+          source_branch: "main" 
+          destination_branch: "JD_Diy" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}       
+     
+          
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/9seconds/mtg.git" # mtg代理
+          source_branch: "master" 
+          destination_branch: "MTG" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
+          
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/rubyangxg/jd-qinglong.git" # 阿东
+          source_branch: "master" 
+          destination_branch: "jd-qinglong" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}
+          
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/cdle/sillyGirl.git" # 傻妞
+          source_branch: "main" 
+          destination_branch: "sillyGirl" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
+          
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/764763903a/xdd-plus.git" # xdd魔改版
+          source_branch: "main" 
+          destination_branch: "xdd-plus" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }} 
+                    
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/Orz-3/mini.git" # Orz-3
+          source_branch: "master" 
+          destination_branch: "mini" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}     
+                              
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/yqchilde/JDMemberCloseAccount.git" # 退会
+          source_branch: "main" 
+          destination_branch: "JDMemberCloseAccount" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}      
+                                        
+      - name: VIP
+        uses: repo-sync/github-sync@v2 
+        if: env.PAT 
+        with: 
+          source_repo: "https://github.com/leecobaby/shortcuts.git" # ios捷径
+          source_branch: "master" 
+          destination_branch: "shortcuts" # 按照自己仓库分支名称修改
+          github_token: ${{ github.event.client_payload.PAT || secrets.PAT }}    
