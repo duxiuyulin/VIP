@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Build 20220203-002-test
+## Build 20220205-001-test
 
 ## 导入通用变量与函数
 dir_shell=/ql/shell
@@ -567,8 +567,8 @@ wsck_to_ck() {
         fi
     }
 
-    if [[ $WSKEY_TO_CK = 1 ]] && [[ ${#wskey_value[@]} -gt 0 ]]; then
-        if [[ ${#ck_invalid[@]} -gt 0 ]]; then
+    if [[ $WSKEY_TO_CK = 1 ]]; then
+        if [[ ${#wskey_value[@]} -gt 0 ]] && [[ ${#ck_invalid[@]} -gt 0 ]]; then
             echo -e "# 检测到失效账号，开始搜索 wskey 转换脚本 ..."
             progress_wskey_scr
         elif [[ ${#wskey_array[@]} -gt 0 ]]; then
